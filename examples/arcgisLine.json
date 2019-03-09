@@ -1,0 +1,441 @@
+{
+  "displayFieldName": "facilityid",
+  "fieldAliases": {
+    "objectid": "OBJECTID",
+    "facilityid": "Facility Identifier",
+    "installdate": "Install Date",
+    "material": "Material",
+    "diameter": "Diameter",
+    "watertype": "Water Type",
+    "enabled": "Enabled",
+    "activeflag": "Active Flag",
+    "ownedby": "Owned By",
+    "maintby": "Managed By",
+    "lastupdate": "Last Update Date",
+    "lasteditor": "Last Editor",
+    "st_length(shape)": "st_length(shape)"
+  },
+  "geometryType": "esriGeometryPolyline",
+  "spatialReference": {
+    "wkt": "PROJCS[\"NAD_1983_HARN_StatePlane_Illinois_East_FIPS_1201\",GEOGCS[\"GCS_North_American_1983_HARN\",DATUM[\"D_North_American_1983_HARN\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"False_Easting\",984250.0],PARAMETER[\"False_Northing\",0.0],PARAMETER[\"Central_Meridian\",-88.33333333333333],PARAMETER[\"Scale_Factor\",0.999975],PARAMETER[\"Latitude_Of_Origin\",36.66666666666666],UNIT[\"Foot_US\",0.3048006096012192]]"
+  },
+  "fields": [
+    {
+      "name": "objectid",
+      "type": "esriFieldTypeOID",
+      "alias": "OBJECTID"
+    },
+    {
+      "name": "facilityid",
+      "type": "esriFieldTypeString",
+      "alias": "Facility Identifier",
+      "length": 20
+    },
+    {
+      "name": "installdate",
+      "type": "esriFieldTypeDate",
+      "alias": "Install Date",
+      "length": 8
+    },
+    {
+      "name": "material",
+      "type": "esriFieldTypeString",
+      "alias": "Material",
+      "length": 20
+    },
+    {
+      "name": "diameter",
+      "type": "esriFieldTypeDouble",
+      "alias": "Diameter"
+    },
+    {
+      "name": "watertype",
+      "type": "esriFieldTypeString",
+      "alias": "Water Type",
+      "length": 30
+    },
+    {
+      "name": "enabled",
+      "type": "esriFieldTypeSmallInteger",
+      "alias": "Enabled"
+    },
+    {
+      "name": "activeflag",
+      "type": "esriFieldTypeSmallInteger",
+      "alias": "Active Flag"
+    },
+    {
+      "name": "ownedby",
+      "type": "esriFieldTypeSmallInteger",
+      "alias": "Owned By"
+    },
+    {
+      "name": "maintby",
+      "type": "esriFieldTypeSmallInteger",
+      "alias": "Managed By"
+    },
+    {
+      "name": "lastupdate",
+      "type": "esriFieldTypeDate",
+      "alias": "Last Update Date",
+      "length": 8
+    },
+    {
+      "name": "lasteditor",
+      "type": "esriFieldTypeString",
+      "alias": "Last Editor",
+      "length": 50
+    },
+    {
+      "name": "st_length(shape)",
+      "type": "esriFieldTypeDouble",
+      "alias": "st_length(shape)"
+    }
+  ],
+  "features": [
+    {
+      "attributes": {
+        "objectid": 326,
+        "facilityid": "128019",
+        "installdate": -126230400000,
+        "material": "DIP",
+        "diameter": 8,
+        "watertype": "Potable",
+        "enabled": 1,
+        "activeflag": 1,
+        "ownedby": 1,
+        "maintby": 1,
+        "lastupdate": 1271761683000,
+        "lasteditor": "ESRI",
+        "st_length(shape)": 110.34896969591186
+      },
+      "geometry": {
+        "paths": [
+          [
+            [
+              1027563.4748762622,
+              1858421.6158619449
+            ],
+            [
+              1027453.1358580962,
+              1858420.1339095309
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 328,
+        "facilityid": "128021",
+        "installdate": -63158400000,
+        "material": "DIP",
+        "diameter": 10,
+        "watertype": "Potable",
+        "enabled": 1,
+        "activeflag": 1,
+        "ownedby": 1,
+        "maintby": 1,
+        "lastupdate": 1271761683000,
+        "lasteditor": "ESRI",
+        "st_length(shape)": 366.64758100923075
+      },
+      "geometry": {
+        "paths": [
+          [
+            [
+              1026793.7910481803,
+              1858087.4770945311
+            ],
+            [
+              1026749.9791279286,
+              1858059.4669799507
+            ],
+            [
+              1026739.0739660114,
+              1858052.4948810339
+            ],
+            [
+              1026704.5399143472,
+              1858033.6579764485
+            ],
+            [
+              1026682.6590525955,
+              1858023.8600957841
+            ],
+            [
+              1026654.4579935111,
+              1858011.2331525311
+            ],
+            [
+              1026640.0180617608,
+              1858005.5979931951
+            ],
+            [
+              1026613.1129318438,
+              1857995.0999827012
+            ],
+            [
+              1026605.4229865968,
+              1857992.0990044475
+            ],
+            [
+              1026550.1858923472,
+              1857976.3168837801
+            ],
+            [
+              1026542.6350544281,
+              1857974.1590797007
+            ],
+            [
+              1026455.1739432625,
+              1857954.899931863
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 388,
+        "facilityid": "129011",
+        "installdate": 315532800000,
+        "material": "DIP",
+        "diameter": 8,
+        "watertype": "Potable",
+        "enabled": 1,
+        "activeflag": 1,
+        "ownedby": 1,
+        "maintby": 1,
+        "lastupdate": 1271761683000,
+        "lasteditor": "ESRI",
+        "st_length(shape)": 48.279795970311064
+      },
+      "geometry": {
+        "paths": [
+          [
+            [
+              1029322.0920939296,
+              1863724.7181166112
+            ],
+            [
+              1029345.6248552613,
+              1863734.8099599481
+            ],
+            [
+              1029357.0729950964,
+              1863754.3820992783
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 418,
+        "facilityid": "130099",
+        "installdate": -63158400000,
+        "material": "DIP",
+        "diameter": 10,
+        "watertype": "Potable",
+        "enabled": 1,
+        "activeflag": 1,
+        "ownedby": 1,
+        "maintby": 1,
+        "lastupdate": 1271761683000,
+        "lasteditor": "ESRI",
+        "st_length(shape)": 20.181915068296433
+      },
+      "geometry": {
+        "paths": [
+          [
+            [
+              1026809.9360290132,
+              1858099.5869784504
+            ],
+            [
+              1026796.6860555112,
+              1858089.6480219513
+            ],
+            [
+              1026793.7910481803,
+              1858087.4770945311
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 419,
+        "facilityid": "130100",
+        "installdate": -126230400000,
+        "material": "CAS",
+        "diameter": 8,
+        "watertype": "Potable",
+        "enabled": 1,
+        "activeflag": 1,
+        "ownedby": 1,
+        "maintby": 1,
+        "lastupdate": 1271761683000,
+        "lasteditor": "ESRI",
+        "st_length(shape)": 7.1314404948395484
+      },
+      "geometry": {
+        "paths": [
+          [
+            [
+              1027956.6729087606,
+              1857669.5501088649
+            ],
+            [
+              1027955.2490270957,
+              1857676.5379557833
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 462,
+        "facilityid": "132357",
+        "installdate": 946684800000,
+        "material": "DIP",
+        "diameter": 8,
+        "watertype": "Potable",
+        "enabled": 1,
+        "activeflag": 1,
+        "ownedby": 1,
+        "maintby": 1,
+        "lastupdate": 1271761683000,
+        "lasteditor": "ESRI",
+        "st_length(shape)": 52.065118812020181
+      },
+      "geometry": {
+        "paths": [
+          [
+            [
+              1039841.2180372626,
+              1859973.2790971994
+            ],
+            [
+              1039841.0520270951,
+              1859976.7781059444
+            ],
+            [
+              1039838.7541314289,
+              1860025.2858829498
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 587,
+        "facilityid": "127952",
+        "installdate": 757382400000,
+        "material": "DIP",
+        "diameter": 6,
+        "watertype": "Potable",
+        "enabled": 1,
+        "activeflag": 1,
+        "ownedby": 1,
+        "maintby": 1,
+        "lastupdate": 1271761683000,
+        "lasteditor": "ESRI",
+        "st_length(shape)": 3.7797780435421338
+      },
+      "geometry": {
+        "paths": [
+          [
+            [
+              1033835.232017763,
+              1858109.4229167849
+            ],
+            [
+              1033835.0610863455,
+              1858105.6470056996
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 4712,
+        "facilityid": "132712",
+        "installdate": -63158400000,
+        "material": "CAS",
+        "diameter": 10,
+        "watertype": "Potable",
+        "enabled": 1,
+        "activeflag": 1,
+        "ownedby": 1,
+        "maintby": 1,
+        "lastupdate": 1271761684000,
+        "lasteditor": "ESRI",
+        "st_length(shape)": 377.84962311826212
+      },
+      "geometry": {
+        "paths": [
+          [
+            [
+              1037772.2090519294,
+              1867991.553086862
+            ],
+            [
+              1037772.1191570945,
+              1867997.3070123643
+            ],
+            [
+              1037771.1089885123,
+              1868061.4479601979
+            ],
+            [
+              1037770.9160755128,
+              1868073.6631588638
+            ],
+            [
+              1037769.9908805117,
+              1868132.3989337832
+            ],
+            [
+              1037769.7809071802,
+              1868145.8470696136
+            ],
+            [
+              1037768.7510535941,
+              1868211.2009415329
+            ],
+            [
+              1037768.6070250124,
+              1868220.366933696
+            ],
+            [
+              1037768.5190986805,
+              1868224.3009809479
+            ],
+            [
+              1037767.0899676792,
+              1868288.0859583616
+            ],
+            [
+              1037766.8140495941,
+              1868300.3989258632
+            ],
+            [
+              1037765.4698921777,
+              1868360.4040552005
+            ],
+            [
+              1037764.7382663451,
+              1868369.3092211112
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

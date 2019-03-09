@@ -1,0 +1,26 @@
+{
+  "name": "coordshelper",
+  "version": "1.0.0",
+  "description": "Helper Utilities Preparing Spatial for insertion into a Microsoft SQL Database.",
+  "keywords": [
+    "eslint"
+  ],
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:kdclaw3/coordshelper.git"
+  },
+  "author": "Dee Clawson",
+  "license": "MIT",
+  "scripts": {
+    "lint": "eslint . --ext=js --fix;  exit 0"
+  },
+  "peerDependencies": {},
+  "optionalDependencies": {},
+  "dependencies": {
+    "babel-eslint": "^10.0.1",
+    "eslint": "^5.15.1",
+    "eslint-config-earthrocker": "^1.1.0",
+    "proj4": "^2.5.0"
+  }
+}

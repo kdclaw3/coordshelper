@@ -1,0 +1,470 @@
+{
+  "displayFieldName": "name",
+  "fieldAliases": {
+    "objectid": "OBJECTID",
+    "requestid": "Service Request ID",
+    "requesttype": "Problem",
+    "comments": "Comments",
+    "name": "Name",
+    "phone": "Phone Number",
+    "email": "Email Address",
+    "requestdate": "Date Submitted",
+    "status": "Status",
+    "building": "Building Name",
+    "floor": "Floor Number"
+  },
+  "geometryType": "esriGeometryPoint",
+  "spatialReference": {
+    "wkid": 102100,
+    "latestWkid": 3857
+  },
+  "fields": [
+    {
+      "name": "objectid",
+      "type": "esriFieldTypeOID",
+      "alias": "OBJECTID"
+    },
+    {
+      "name": "requestid",
+      "type": "esriFieldTypeString",
+      "alias": "Service Request ID",
+      "length": 25
+    },
+    {
+      "name": "requesttype",
+      "type": "esriFieldTypeString",
+      "alias": "Problem",
+      "length": 100
+    },
+    {
+      "name": "comments",
+      "type": "esriFieldTypeString",
+      "alias": "Comments",
+      "length": 255
+    },
+    {
+      "name": "name",
+      "type": "esriFieldTypeString",
+      "alias": "Name",
+      "length": 150
+    },
+    {
+      "name": "phone",
+      "type": "esriFieldTypeString",
+      "alias": "Phone Number",
+      "length": 12
+    },
+    {
+      "name": "email",
+      "type": "esriFieldTypeString",
+      "alias": "Email Address",
+      "length": 100
+    },
+    {
+      "name": "requestdate",
+      "type": "esriFieldTypeDate",
+      "alias": "Date Submitted",
+      "length": 8
+    },
+    {
+      "name": "status",
+      "type": "esriFieldTypeString",
+      "alias": "Status",
+      "length": 50
+    },
+    {
+      "name": "building",
+      "type": "esriFieldTypeString",
+      "alias": "Building Name",
+      "length": 25
+    },
+    {
+      "name": "floor",
+      "type": "esriFieldTypeString",
+      "alias": "Floor Number",
+      "length": 5
+    }
+  ],
+  "features": [
+    {
+      "attributes": {
+        "objectid": 1299199,
+        "requestid": "1",
+        "requesttype": "Snow Complaint",
+        "comments": "Plow my street. ",
+        "name": "Lindsay Carter",
+        "phone": "999-9999",
+        "email": "Lindsay@Lindsay.com",
+        "requestdate": 1295252247000,
+        "status": "Unassigned",
+        "building": null,
+        "floor": "0"
+      },
+      "geometry": {
+        "x": -9814396.0827533137,
+        "y": 5124911.0747664627
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 1299200,
+        "requestid": "2",
+        "requesttype": "Snow Complaint",
+        "comments": "Plow my street. ",
+        "name": "John Mary",
+        "phone": "999-9999",
+        "email": "John@John.com",
+        "requestdate": 1295252247000,
+        "status": "Unassigned",
+        "building": null,
+        "floor": "0"
+      },
+      "geometry": {
+        "x": -9816176.2657113411,
+        "y": 5124077.9903259845
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 1299201,
+        "requestid": "3",
+        "requesttype": "Snow Complaint",
+        "comments": "Plow my street. ",
+        "name": "Carol Anthony",
+        "phone": "999-9999",
+        "email": "Carol@Carol.com",
+        "requestdate": 1295252247000,
+        "status": "Unassigned",
+        "building": null,
+        "floor": "0"
+      },
+      "geometry": {
+        "x": -9813731.9457642063,
+        "y": 5123528.7952886987
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 1299202,
+        "requestid": "4",
+        "requesttype": "Snow Complaint",
+        "comments": "Plow my street. ",
+        "name": "Mamata Mother",
+        "phone": "999-9999",
+        "email": "Mamata@mamata.com",
+        "requestdate": 1295252247000,
+        "status": "Unassigned",
+        "building": null,
+        "floor": "0"
+      },
+      "geometry": {
+        "x": -9813954.7425597385,
+        "y": 5127533.9113770528
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 1299203,
+        "requestid": "5",
+        "requesttype": "Snow Complaint",
+        "comments": "Plow my street. ",
+        "name": "Matt Jackson",
+        "phone": "999-9999",
+        "email": "Matt@Matt.com",
+        "requestdate": 1295252247000,
+        "status": "Unassigned",
+        "building": null,
+        "floor": "0"
+      },
+      "geometry": {
+        "x": -9810931.6901943162,
+        "y": 5126657.3977061547
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 1299204,
+        "requestid": "6",
+        "requesttype": "Snow Complaint",
+        "comments": "Plow my street. ",
+        "name": "Teddie Solo",
+        "phone": "999-9999",
+        "email": "Teddie@Teddie.com",
+        "requestdate": 1295252247000,
+        "status": "Unassigned",
+        "building": null,
+        "floor": "0"
+      },
+      "geometry": {
+        "x": -9809505.380428886,
+        "y": 5126410.0632864395
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 1299205,
+        "requestid": "7",
+        "requesttype": "Snow Complaint",
+        "comments": "Plow my street. ",
+        "name": "Ralf Mono",
+        "phone": "999-9999",
+        "email": "Ralf@Ralf.com",
+        "requestdate": 1295252247000,
+        "status": "Unassigned",
+        "building": null,
+        "floor": "0"
+      },
+      "geometry": {
+        "x": -9811787.3543648962,
+        "y": 5119855.0038718553
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 1299206,
+        "requestid": "8",
+        "requesttype": "Snow Complaint",
+        "comments": "Plow my street. ",
+        "name": "Gearlyn Kassouf",
+        "phone": "999-9999",
+        "email": "Gearlyn@Gearlyn.com",
+        "requestdate": 1295252247000,
+        "status": "Unassigned",
+        "building": null,
+        "floor": "0"
+      },
+      "geometry": {
+        "x": -9810068.9173368216,
+        "y": 5119459.0328281
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 1299207,
+        "requestid": "1",
+        "requesttype": "Snow Complaint",
+        "comments": "Plow my street. ",
+        "name": "Lindsay Carter",
+        "phone": "999-9999",
+        "email": "Lindsay@Lindsay.com",
+        "requestdate": 1295252247000,
+        "status": "Unassigned",
+        "building": null,
+        "floor": "0"
+      },
+      "geometry": {
+        "x": -9814396.0827533137,
+        "y": 5124911.0747664627
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 1299208,
+        "requestid": "2",
+        "requesttype": "Snow Complaint",
+        "comments": "Plow my street. ",
+        "name": "John Mary",
+        "phone": "999-9999",
+        "email": "John@John.com",
+        "requestdate": 1295252247000,
+        "status": "Unassigned",
+        "building": null,
+        "floor": "0"
+      },
+      "geometry": {
+        "x": -9816176.2657113411,
+        "y": 5124077.9903259845
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 1299209,
+        "requestid": "3",
+        "requesttype": "Snow Complaint",
+        "comments": "Plow my street. ",
+        "name": "Carol Anthony",
+        "phone": "999-9999",
+        "email": "Carol@Carol.com",
+        "requestdate": 1295252247000,
+        "status": "Unassigned",
+        "building": null,
+        "floor": "0"
+      },
+      "geometry": {
+        "x": -9813731.9457642063,
+        "y": 5123528.7952886987
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 1299210,
+        "requestid": "4",
+        "requesttype": "Snow Complaint",
+        "comments": "Plow my street. ",
+        "name": "Mamata Mother",
+        "phone": "999-9999",
+        "email": "Mamata@mamata.com",
+        "requestdate": 1295252247000,
+        "status": "Unassigned",
+        "building": null,
+        "floor": "0"
+      },
+      "geometry": {
+        "x": -9813954.7425597385,
+        "y": 5127533.9113770528
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 1299211,
+        "requestid": "5",
+        "requesttype": "Snow Complaint",
+        "comments": "Plow my street. ",
+        "name": "Matt Jackson",
+        "phone": "999-9999",
+        "email": "Matt@Matt.com",
+        "requestdate": 1295252247000,
+        "status": "Unassigned",
+        "building": null,
+        "floor": "0"
+      },
+      "geometry": {
+        "x": -9810931.6901943162,
+        "y": 5126657.3977061547
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 1299212,
+        "requestid": "6",
+        "requesttype": "Snow Complaint",
+        "comments": "Plow my street. ",
+        "name": "Teddie Solo",
+        "phone": "999-9999",
+        "email": "Teddie@Teddie.com",
+        "requestdate": 1295252247000,
+        "status": "Unassigned",
+        "building": null,
+        "floor": "0"
+      },
+      "geometry": {
+        "x": -9809505.380428886,
+        "y": 5126410.0632864395
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 1299213,
+        "requestid": "7",
+        "requesttype": "Snow Complaint",
+        "comments": "Plow my street. ",
+        "name": "Ralf Mono",
+        "phone": "999-9999",
+        "email": "Ralf@Ralf.com",
+        "requestdate": 1295252247000,
+        "status": "Unassigned",
+        "building": null,
+        "floor": "0"
+      },
+      "geometry": {
+        "x": -9811787.3543648962,
+        "y": 5119855.0038718553
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 1299214,
+        "requestid": "8",
+        "requesttype": "Snow Complaint",
+        "comments": "Plow my street. ",
+        "name": "Gearlyn Kassouf",
+        "phone": "999-9999",
+        "email": "Gearlyn@Gearlyn.com",
+        "requestdate": 1295252247000,
+        "status": "Unassigned",
+        "building": null,
+        "floor": "0"
+      },
+      "geometry": {
+        "x": -9810068.9173368216,
+        "y": 5119459.0328281
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 1299215,
+        "requestid": "11",
+        "requesttype": "Animal Complaint",
+        "comments": "Loose dog",
+        "name": "Kelsey Merrell",
+        "phone": "999-9999",
+        "email": "Kelsey@Kelsey.com",
+        "requestdate": 1298952711000,
+        "status": "Unassigned",
+        "building": null,
+        "floor": null
+      },
+      "geometry": {
+        "x": -9810265.4483056013,
+        "y": 5132711.0497333705
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 1299216,
+        "requestid": "39",
+        "requesttype": "Animal Complaint",
+        "comments": "Stray cat",
+        "name": "Jeremy Wentzell",
+        "phone": "999-9999",
+        "email": "Jeremy@Jeremy.com",
+        "requestdate": 1299575823000,
+        "status": "Unassigned",
+        "building": null,
+        "floor": null
+      },
+      "geometry": {
+        "x": -9810584.9047908969,
+        "y": 5129838.4024121473
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 1299217,
+        "requestid": "111",
+        "requesttype": "Animal Complaint",
+        "comments": "Stray dog",
+        "name": "Micheal Gunn",
+        "phone": "999-9999",
+        "email": "Micheal@Micheal.com",
+        "requestdate": 1300727132000,
+        "status": "Unassigned",
+        "building": null,
+        "floor": null
+      },
+      "geometry": {
+        "x": -9811562.2278098613,
+        "y": 5129385.7630072786
+      }
+    },
+    {
+      "attributes": {
+        "objectid": 1299218,
+        "requestid": "73",
+        "requesttype": "Animal Complaint",
+        "comments": "Barking dog",
+        "name": "Jonathan Thomas\r\n",
+        "phone": "999-9999",
+        "email": "Jonathan@Jonathan.com",
+        "requestdate": 1300118622000,
+        "status": "Unassigned",
+        "building": null,
+        "floor": null
+      },
+      "geometry": {
+        "x": -9812103.8397263903,
+        "y": 5129252.2320047924
+      }
+    }
+  ]
+}
