@@ -1,6 +1,6 @@
 {
   "name": "coordshelper",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Helper Utilities Preparing Spatial for insertion into a Microsoft SQL Database.",
   "keywords": [
     "esri",

@@ -19,13 +19,13 @@ const funk = {
   },
 
   geometry: (feature, cs) => {
+    if (typeof (feature || {}).geometry !== 'object') return null;
     if (typeof ((feature || {}).geometry || {}).type !== 'string') return null;
-    let wtp; // what to pass
-    if (feature.geometry.coordinates) wtp = feature.geometry.coordinates; // geojson
-    else if (feature.geometry.rings) wtp = feature.geometry.rings; // esri polygon
+    let wtp = feature.geometry.coordinates; // geojson
+    if (feature.geometry.rings) wtp = feature.geometry.rings; // esri polygon
     else if (feature.geometry.paths) wtp = feature.geometry.paths[0]; // esri line
     else if (feature.geometry.x) wtp = [feature.geometry.x, feature.geometry.y]; // esri point
-    if (typeof ((feature || {}).geometry || {}).coordinates !== 'object') return null;
+    if (!Array.isArray(wtp) || (Array.isArray(wtp) && wtp.toString().replace(/,/, '') === '')) return null;
     let t = feature.geometry.type;
     let str = `geography::${funk.mapping[t].f}('${funk.mapping[t].t} `;
     let r = funk.recurse(wtp, cs);
@@ -51,7 +51,7 @@ const funk = {
   },
 
   recurse: (obj, cs, cb) => {
-    if (Array.isArray(obj) && !obj.some(isNaN)) {
+    if (Array.isArray(obj) && obj.length === 2 && !obj.some(isNaN)) {
       obj = cs ? proj4(cs, 'EPSG:4326', obj).join(' ') : obj.join(' ');
     } else if (Array.isArray(obj)) {
       if(funk.isAntiClockwise(obj) === false) obj.reverse();
