@@ -25,7 +25,7 @@ const funk = {
     if (feature.geometry.rings) wtp = feature.geometry.rings; // esri polygon
     else if (feature.geometry.paths) wtp = feature.geometry.paths[0]; // esri line
     else if (feature.geometry.x) wtp = [feature.geometry.x, feature.geometry.y]; // esri point
-    if (!Array.isArray(wtp) || (Array.isArray(wtp) && wtp.toString().replace(/,/, '') === '')) return null;
+    if (!Array.isArray(wtp) || (Array.isArray(wtp) && wtp.toString().replace(/,/g, '') === '')) return null;
     let t = feature.geometry.type;
     let str = `geography::${funk.mapping[t].f}('${funk.mapping[t].t} `;
     let r = funk.recurse(wtp, cs);
