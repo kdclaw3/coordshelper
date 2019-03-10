@@ -1,5 +1,6 @@
 # coordshelper
 
+
 Utility functions for transforming coordinates for insertion into Microsoft SQL Database. SQL Server decides to be finicky about inserting valid geography with the correct ring orientation and valid syntax. The use case for this package was to specifically:
 
 * Transform ArcGIS Server Feature Coordinates or GeoJSON Coordinates to MSSQL geography
@@ -7,6 +8,10 @@ Utility functions for transforming coordinates for insertion into Microsoft SQL 
 * Polygon Correction: SQL Server requires anticlockwise coordinates for polygons, usually... 
 * Spatial Projection: Allow the projection of coordinates into a geographic coordinate system (EPSG:4326). This library uses "proj4", found good luck in specifying proj4 coordinate systems from http://spatialreference.org/. 
 * Valid Geometry: After all this work SQL Server tends to freeeeak out, we lazily slap a MakeValid() on every geometry.
+
+
+# ![Alt text](us.png?raw=true "Title")
+
 
 ## Install
 
