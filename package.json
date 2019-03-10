@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "description": "Helper Utilities Preparing Spatial for insertion into a Microsoft SQL Database.",
   "keywords": [
-    "eslint"
+    "esri",
+    "mssql",
+    "spatial sql",
+    "sql",
+    "geojson"
   ],
   "main": "index.js",
   "repository": {
