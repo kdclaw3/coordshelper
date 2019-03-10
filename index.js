@@ -38,14 +38,13 @@ const funk = {
     return str;
   },
 
-  // singed area i.e. shoelace function, techically for signed area you need to devide by 2
+  // singed area i.e. shoelace function, technically for signed area you need to divide by 2
   isAntiClockwise: poly => {
-    if(!poly || poly.length < 3) return null; // has to have 3 + beginning to be a poly
+    if (!poly || poly.length < 3) return null; // has to have 3 + beginning to be a poly
     const end = poly.length - 1;
-    // console.log('check for poly');
     if (poly[0].toString() !== poly[end].toString()) return null; // end has to match start
-    let sum = poly[end][0] * poly[0][1] - poly[0][0] * poly[end][1]; // end of singned area/shoelace
-    for(let i = 0; i < end; ++i) { // calculate begininning of singed area
+    let sum = poly[end][0] * poly[0][1] - poly[0][0] * poly[end][1]; // end of signed area/shoelace
+    for(let i = 0; i < end; ++i) { // calculate beginning of singed area
       const n = i + 1;
       sum += poly[i][0] * poly[n][1] - poly[n][0] * poly[i][1];
     }
