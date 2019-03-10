@@ -45,7 +45,7 @@ geography::STPolyFromText('POLYGON ((-79.98301052449202 40.68075935135676,-79.99
 
 Specifying something like this...
 ```js
-const geometry = require('./index.js');
+const geometry = require('coordshelper');
 let feature = {
   attributes: {
     'objectid': 1007165,
@@ -83,7 +83,7 @@ let feature = {
     ]
   }
 };
-feature.geometry.type = 'esriGeometryPolygon';
+feature.geometry.type = 'esriGeometryPolygon'; // <--see esri examples, esri declares type at the route not the feature
 let cs = 'EPSG:3857';
 let d = geometry.geometry(feature, cs);
 console.log(d + '\n');
