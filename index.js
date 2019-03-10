@@ -5,7 +5,6 @@ const funk = {
 
   // https://docs.microsoft.com/en-us/sql/t-sql/spatial-geography/stlinefromtext-geography-data-type?view=sql-server-2017
   mapping: {
-
     // geojson
     Point: { f: 'STPointFromText', t: 'POINT' },
     MultiPoint: { f: 'STMPointFromText', t: 'MULTIPOINT' },
@@ -13,7 +12,6 @@ const funk = {
     MultiLineString: { f: 'STMLineFromText', t: 'MULTILINESTRING' },
     Polygon: { f: 'STPolyFromText', t: 'POLYGON' },
     MultiPolygon: { f: 'STMPolyFromText', t: 'MULTIPOLYGON' },
-
     // esri
     esriGeometryPolygon: { f: 'STPolyFromText', t: 'POLYGON' },
     esriGeometryPoint: { f: 'STPointFromText', t: 'POINT' },
@@ -21,6 +19,7 @@ const funk = {
   },
 
   geometry: (feature, cs, cb) => {
+    if (typeof ((feature || {}).geometry || {}).type !== 'string') return done(null);
     let t = feature.geometry.type;
     let str = `geography::${funk.mapping[t].f}('${funk.mapping[t].t} `;
     let wtp; // what to pass
@@ -33,9 +32,12 @@ const funk = {
       r = JSON.stringify(r).replace(/"|\[|\]/gi, matched => (mapObj[matched]));
       r = r.indexOf('(') === -1 ? `(${r})` : r;
       str += r + `', 4326).MakeValid()`;
+      done(str);
     });
-    if (typeof cb === 'function') return cb(str);
-    return str;
+    function done (str) {
+      if (typeof cb === 'function') return cb(str);
+      return str;
+    }
   },
 
   // singed area i.e. shoelace function, technically for signed area you need to divide by 2

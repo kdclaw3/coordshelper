@@ -3,15 +3,16 @@ const geometry = require('../index.js');
 
 // geojson
 let geoJSON = require('./geoJSON').features;
-for (let i = 0, l = geoJSON.length; i < l; i++) {
+for (let i = 0, l = geoJSON.length; i < 1; i++) {
   const feature = geoJSON[i];
-  if (feature && feature.geometry && feature.geometry.coordinates) {
-    let cs = '+proj=lcc +lat_1=40.96666666666667 +lat_2=39.93333333333333 +lat_0=39.33333333333334 +lon_0=-77.75 +x_0=600000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs ';
-    let d = geometry.geometry(feature, cs);
-    console.log('select', d + '\nunion all');
-  }
+  // if (feature && feature.geometry && feature.geometry.coordinates) {
+  let cs = '+proj=lcc +lat_1=40.96666666666667 +lat_2=39.93333333333333 +lat_0=39.33333333333334 +lon_0=-77.75 +x_0=600000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs ';
+  let d = geometry.geometry(feature, cs);
+  console.log('select', d + '\nunion all');
+  // }
 }
 
+/*
 // arcgis poly
 let arcgisPoly = require('./arcgisPoly.json');
 for (let i = 0, l = arcgisPoly.features.length; i < l; i++) {
@@ -46,4 +47,4 @@ for (let i = 0, l = arcgisPoint.features.length; i < l; i++) {
     let d = geometry.geometry(feature, cs);
     console.log('select', d + '\nunion all');
   }
-}
+}*/
