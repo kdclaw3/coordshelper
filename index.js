@@ -18,32 +18,29 @@ const funk = {
     esriGeometryPolyline: { f: 'STLineFromText', t: 'LINESTRING' }
   },
 
-  geometry: (feature, cs, cb) => {
-    if (typeof ((feature || {}).geometry || {}).type !== 'string') return done(null);
-    let t = feature.geometry.type;
-    let str = `geography::${funk.mapping[t].f}('${funk.mapping[t].t} `;
+  geometry: (feature, cs) => {
+    if (typeof ((feature || {}).geometry || {}).type !== 'string') return null;
     let wtp; // what to pass
     if (feature.geometry.coordinates) wtp = feature.geometry.coordinates; // geojson
     else if (feature.geometry.rings) wtp = feature.geometry.rings; // esri polygon
     else if (feature.geometry.paths) wtp = feature.geometry.paths[0]; // esri line
     else if (feature.geometry.x) wtp = [feature.geometry.x, feature.geometry.y]; // esri point
-    funk.recurse(wtp, cs, r => {
-      const mapObj = { '"': '', '[': '(', ']': ')' };
-      r = JSON.stringify(r).replace(/"|\[|\]/gi, matched => (mapObj[matched]));
-      r = r.indexOf('(') === -1 ? `(${r})` : r;
-      str += r + `', 4326).MakeValid()`;
-      done(str);
-    });
-    function done (str) {
-      if (typeof cb === 'function') return cb(str);
-      return str;
-    }
+    if (typeof ((feature || {}).geometry || {}).coordinates !== 'object') return null;
+    let t = feature.geometry.type;
+    let str = `geography::${funk.mapping[t].f}('${funk.mapping[t].t} `;
+    let r = funk.recurse(wtp, cs);
+    const mapObj = { '"': '', '[': '(', ']': ')' };
+    r = JSON.stringify(r).replace(/"|\[|\]/gi, matched => (mapObj[matched]));
+    r = r.indexOf('(') === -1 ? `(${r})` : r;
+    str += r + `', 4326).MakeValid()`;
+    return str;
   },
 
   // singed area i.e. shoelace function, technically for signed area you need to divide by 2
   isAntiClockwise: poly => {
-    if (!poly || poly.length < 3) return null; // has to have 3 + beginning to be a poly
+    if(!poly || poly.length < 3) return null; // has to have 3 + beginning to be a poly
     const end = poly.length - 1;
+    // console.log('check for poly');
     if (poly[0].toString() !== poly[end].toString()) return null; // end has to match start
     let sum = poly[end][0] * poly[0][1] - poly[0][0] * poly[end][1]; // end of signed area/shoelace
     for(let i = 0; i < end; ++i) { // calculate beginning of singed area
@@ -66,9 +63,11 @@ const funk = {
     } else {
       obj = 'what the funk?';
     }
-    return cb(obj);
+    if (typeof cb === 'function') {
+      return cb(obj);
+    }
+    return obj;
   }
-
 };
 
 module.exports = funk;
