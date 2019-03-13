@@ -67,7 +67,43 @@ const funk = {
       return cb(obj);
     }
     return obj;
+  },
+
+  gridLocation: (n, origin = [0, 0], spacing = [1, 1]) => {
+    // always pass the javascript index of the element
+    n = n + 1;
+    let ring;
+    let sqrt = Math.sqrt(n);
+    if (Number.isInteger(sqrt) && Math.floor(sqrt) % 2 !== 0) {
+      ring = sqrt;
+    } else if (Math.floor(sqrt) % 2 === 0) {
+      ring = Math.floor(sqrt) + 1;
+    } else {
+      ring = Math.floor(sqrt) + 2;
+    }
+    let max = Math.floor(ring / 2);
+    let lastNumberOfRing = ring * ring;
+    let positionInRing = Math.abs(n - lastNumberOfRing);
+
+    let xGrid, yGrid, xT = [], xS = [], yB;
+    for (let x = (max * -1); x <= max; ++x) {
+      xT.push(x);
+    }
+    for (let x = 0; x < ring - 2; ++x) {
+      xS.push(max);
+    }
+    xGrid = [...xT, ...xS, ...xT.reverse(), ...xS.map(x => -x)];
+
+    yGrid = [...xGrid];
+    yB = [...yGrid.splice(0, ring - 1)];
+    yGrid.push(...yB);
+
+    return {
+      x: (xGrid[positionInRing] * spacing[0]) + origin[0],
+      y: (yGrid[positionInRing] * spacing[1]) + origin[1]
+    };
   }
+
 };
 
 module.exports = funk;
