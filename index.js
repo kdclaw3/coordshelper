@@ -18,9 +18,10 @@ const funk = {
     esriGeometryPolyline: { f: 'STLineFromText', t: 'LINESTRING' }
   },
 
-  geometry: (feature, cs) => {
-    if (typeof (feature || {}).geometry !== 'object') return null;
-    if (typeof ((feature || {}).geometry || {}).type !== 'string') return null;
+  geometry: (feature_in, cs) => {
+    if (typeof (feature_in || {}).geometry !== 'object') return null;
+    if (typeof ((feature_in || {}).geometry || {}).type !== 'string') return null;
+    let feature = JSON.parse(JSON.stringify(feature_in)); //deep copy
     let wtp = feature.geometry.coordinates; // geojson
     if (feature.geometry.rings) wtp = feature.geometry.rings; // esri polygon
     else if (feature.geometry.paths) wtp = feature.geometry.paths[0]; // esri line
