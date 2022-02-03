@@ -77,4 +77,4 @@ geography::STPolyFromText('POLYGON ((-117.4421261971822 33.91069040186868,-117.4
 ```
 
 ## License
-MIT License, Copyright (c) 2019 Dee Clawson
+MIT License
