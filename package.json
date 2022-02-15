@@ -1,5 +1,5 @@
 {
-  "name": "coordshelper",
+  "name": "@kdclaw3/coordshelper",
   "version": "1.2.0",
   "description": "Helper Utilities Preparing Spatial for insertion into a Microsoft SQL Database.",
   "files": [
