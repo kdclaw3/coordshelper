@@ -1,80 +1,208 @@
-# coordshelper
+# coordshelper v2
 
+Pure GeoJSON and Esri JSON conversion to parameterized SQL Server `geography` or
+`geometry` constructors. Version 2 is currently unreleased and replaces the v1 API.
+It performs no network access, database execution or automatic SQL `MakeValid()`.
 
-Utility functions for transforming coordinates for insertion into Microsoft SQL Database. SQL Server decides to be finicky about inserting valid geography with the correct ring orientation and valid syntax. The use case for this package was to specifically:
+## Runtime and API
 
-* Transform ArcGIS Server Feature Coordinates or GeoJSON Coordinates to MSSQL geography
-* Coordinates Tree Traversal: Process large lines, polygons, and multipolygons quickly without dropping multis or loosing minus polygons.
-* Polygon Correction: SQL Server requires anticlockwise coordinates for polygons, usually... 
-* Spatial Projection: Allow the projection of coordinates into a geographic coordinate system (EPSG:4326). This library uses "proj4", found good luck in specifying proj4 coordinate systems from http://spatialreference.org/. 
-* Valid Geometry: After all this work SQL Server tends to freeeeak out, we lazily slap a MakeValid() on every geometry.
+Node.js 22 or newer. The supported interface is **ESM-only**, with named exports;
+CommonJS `require()` is not supported. TypeScript declarations are included.
 
-
-# ![Alt text](us.png?raw=true "Title")
-
-
-## Install
-
-To use it in your project, run:
-
-```bash
-npm install --save coordshelper
-```
-
-## GeoJSON Example
-
-Specifying something like this...
 ```js
-const geometry = require('coordshelper');
-let feature = {
-	type: 'Feature',
-	id: 1,
-	geometry: {
-		type: 'Polygon',
-		coordinates: [[[1349235.9285449, 498684.84654698], [1349199.5195318, 497632.0466852], [1349692.1275532, 497527.06626685], [1345877.3452267, 498207.3156757], [1346722.8178152, 498340.50814124], [1346731.0806201, 498725.56802003], [1349235.9285449, 498684.84654698]]]
-	},
-	properties: { NAME: 'PITTSBURGH' }
-};
-// State Plane Coordinate System Pennsylvania South (ftus)
-let cs = '+proj=lcc +lat_1=40.96666666666667 +lat_2=39.93333333333333 +lat_0=39.33333333333334 +lon_0=-77.75 +x_0=600000 +y_0=0 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs';
-let d = geometry.geometry(feature, cs);
-console.log(d + '\n');
+import { fromGeoJSON, sqlBinding } from 'coordshelper';
+
+const value = fromGeoJSON({
+  type: 'Feature',
+  id: 'source-uuid',
+  properties: {},
+  geometry: { type: 'Point', coordinates: [-83, 43] },
+});
+const binding = sqlBinding(value);
+// expression: geography::STGeomFromText(@wkt, @srid)
+// Bind parameters.wkt as NVarChar(MAX), parameters.srid as Int.
 ```
 
-Will give you something like this...
-```sql
-geography::STPolyFromText('POLYGON ((-79.98301052449202 40.68075935135676,-79.99204263502472 40.68069690676022,-79.99203717387824 40.67963973601989,-79.99507230435954 40.679215307900044,-79.98126075345523 40.67761406748069,-79.98304578309079 40.67786795917588,-79.98301052449202 40.68075935135676))', 4326).MakeValid()
-```
+The application binds and executes SQL. Single-feature conversion does not choose
+an asset identifier or persist anything; it returns the spatial value only.
 
-## Esri ArcGIS Server Example
+| Export                           | Input and result                                                                          |
+| -------------------------------- | ----------------------------------------------------------------------------------------- |
+| `fromGeoJSON(input, options)`    | Geometry, Feature or FeatureCollection; one spatial result, null, or per-feature results. |
+| `fromEsri(input, options)`       | Esri geometry, individual feature or FeatureSet.                                          |
+| `fromFeatureSet(input, options)` | Optional Esri collection wrapper around the same single-feature converter.                |
+| `fromSpatial(input, options)`    | Explicit SQL spatial representation, including curves and FullGlobe.                      |
+| `toSqlSpatial(input, options)`   | Adapter selection; `format` can explicitly select geojson, esri or spatial.               |
+| `sqlBinding(result, options)`    | One bound SQL constructor; optionally customize distinct parameter names.                 |
+| `SpatialError`                   | Failure with stable `code`, `path` and `detail`.                                          |
 
-Specifying something like this...
+A spatial result contains `type`, `spatialType`, `srid`, `wkt`, normalized `geometry`,
+`diagnostics` and `validation`. The input is not mutated. **`sqlServerValidated`
+is always false**: local checks do not replace verification in the target SQL engine.
+
+## Individual features and optional collections
+
+Individual features are the primary conversion contract. An Esri feature can omit
+metadata stored on its containing FeatureSet; supply it in conversion options:
+
 ```js
-const geometry = require('coordshelper');
-let feature = {
-  attributes: {
-    'objectid': 1007165,
-    'apn': '234270017',
-    'address': '3125  Myers St',
-    'pool_permit': 0,
-    'has_pool': 0,
-    'st_area(shape)': 82300.902959399231,
-    'st_length(shape)': 1256.8567145994186
-  },
-  geometry: {
-    rings: [[[-13073597.685949696, 4016816.2240414247], [-13073556.927396163, 4016869.786173813], [-13073373.50213326, 4016598.5825590119], [-13073609.988653919, 4016800.3193637431], [-13073597.685949696, 4016816.2240414247]]]
-  }
-};
-feature.geometry.type = 'esriGeometryPolygon'; // <--see esri examples, esri declares type at the route not the feature
-let cs = 'EPSG:3857';
-let d = geometry.geometry(feature, cs);
-console.log(d + '\n');
+import { fromEsri, fromFeatureSet } from 'coordshelper';
+
+const spatial = fromEsri(feature, {
+  spatialReference: { wkid: 4326 },
+  hasZ: false,
+  hasM: true,
+});
+const results = fromFeatureSet(response, { onError: 'collect' });
+for (const { id, spatial, error } of results) {
+  if (error) console.error(id, error.code, error.path);
+  else if (spatial) console.log(id, spatial.wkt);
+}
 ```
 
-Will give you something like this...
-```sql
-geography::STPolyFromText('POLYGON ((-117.4421261971822 33.91069040186868,-117.44223671425458 33.9105718293564,-117.44011231969463 33.90906782733127,-117.44176005686622 33.91108971692754,-117.4421261971822 33.91069040186868))', 4326).MakeValid()
+Both collection adapters default to `onError: 'collect'`, returning
+`{id, spatial, error}` for every feature. Errors include `$.features[index]`.
+Use `onError: 'throw'` to stop at the first failure. Malformed collection structure
+or collection-wide legacy CRS declarations can fail before feature processing.
+
+Esri shared metadata includes `geometryType`, `spatialReference`, `hasZ` and `hasM`.
+Conflicting feature declarations are rejected. If shared CRS is missing, the first
+feature's CRS supplies it. Declared GlobalID fields take precedence over ObjectID,
+matching names regardless of case; duplicate casing is an identity error. UUID
+normalization, uniqueness checks, pagination and synchronization belong to the caller.
+Without declared field names, the wrapper looks for GlobalID and OBJECTID.
+
+## Projection and native planar coordinates
+
+GeoJSON coordinates are WGS84 longitude/latitude unless the caller explicitly
+supplies `sourceCrs`. Legacy `crs` on a Geometry, Feature or FeatureCollection requires
+an explicit `sourceCrs`; it is never silently accepted as WGS84.
+
+Esri WKIDs can supply the source CRS. Common Web Mercator aliases resolve to
+EPSG:3857; Esri-only 100xxx identifiers remain in the ESRI namespace. Prefer a
+verified `latestWkid` where available. The library does not bundle every projection.
+Provide missing definitions or a ready-made XY converter:
+
+```js
+const projected = fromEsri(feature, {
+  projectionDefinitions: { 'ESRI:102999': verifiedProjectionDefinition },
+});
+const custom = fromEsri(feature, {
+  converter: ([x, y]) => existingConverter.forward([x, y]),
+});
+const native = fromEsri(feature, {
+  spatialType: 'geometry',
+  project: false,
+  srid: 1234,
+});
 ```
 
-## License
-MIT License
+Definition maps are local to a conversion; proj4's global registry is not modified.
+Projection is constructed once per feature, not once per position. Z/M values are
+preserved without vertical transformation. The converter must return two finite XY
+numbers. Reprojected planar output requires `targetCrs` unless a converter is supplied.
+
+Native planar output retains source coordinates. When `srid` is omitted in native
+Esri mode, a numeric `latestWkid`/`wkid` becomes the label; that label does not prove
+the identifier is an EPSG code. Geography output supports **WGS84 SRID 4326 only**;
+other datums, including NAD83 and GDA94, require verified reprojection to WGS84.
+
+## Shapes, dimensions and empty values
+
+All seven GeoJSON geometry types are supported, with XY and optional Z. Measures
+require Esri or explicit spatial input: XYM emits SQL's positional `NULL` Z, and
+XYZM preserves both. SQL dimensional markers such as `POINT Z` are not emitted.
+Mixed dimensions, nonfinite coordinates and inconsistent ring closure are rejected.
+
+GeoJSON null geometry and Esri features without geometry return null. Empty coordinate
+arrays produce typed `EMPTY` values. Esri `{x: null}` and `{xmin: null}` produce empty
+Point and Polygon respectively. Strings such as `"NaN"` are malformed coordinates,
+not silently discarded records. Empty rings inside nonempty polygons are rejected.
+
+`fromSpatial` supports CircularString (`coordinates`), CompoundCurve (`segments`),
+CurvePolygon (`rings`) and FullGlobe. These are not invented GeoJSON types. FullGlobe
+is geography-only and cannot be nested inside GeometryCollection. Explicit spatial
+curved ring direction is preserved for the caller's target-engine verification.
+
+Esri circular `c` arcs are retained as curves. Its curved rings are classified using
+analytic local circular geometry, shells rewound counterclockwise and holes clockwise;
+several shells produce GeometryCollection. Geography classification is restricted to
+local non-polar extents at most 10 degrees wide/high within +/-80 latitude. Crossings,
+contacts, overlapping arcs, global ambiguity, elliptical/Bezier arcs and curved
+reprojection are rejected. `orientation: 'preserve'` is unavailable for Esri curved
+rings; use explicit spatial input for deliberate interiors. Verify curved hole
+containment, intended interior and area in SQL; validity alone is insufficient.
+
+## Repairs and interpretation
+
+| Policy                     | Behavior                                                                  |
+| -------------------------- | ------------------------------------------------------------------------- |
+| `repair: 'none'`           | Reject incorrect closure, duplicate vertices or winding.                  |
+| `repair: 'safe'` (default) | Diagnose structural closure, exact duplicate removal and winding changes. |
+| `repair: 'topology'`       | Explicit local topology repair; can change type, vertices or part count.  |
+
+Polygon winding uses WGS84 ellipsoidal area. `orientation: 'preserve'` retains deliberate
+large interiors for ordinary GeoJSON or explicit spatial input. Planar clipping is
+not used to repair polar/global topology, dimensional topology or preserved interiors.
+Ordinary explicit polygon repair uses a nonzero shell union minus holes.
+
+Esri containment handles disjoint shells, holes and islands. Under explicit topology
+repair, consistently clockwise shell rings can be unioned. Crossing mixed-role rings
+remain rejected rather than guessing shell/hole intent. Line overlap repair preserves
+directed traversal and every Z/M value by isolating affected segments in a
+GeometryCollection, retaining unaffected runs. A repair that changes a CompoundCurve
+section's type is rejected with `CURVE_REPAIR`.
+
+Polygon intersection screening uses unwrapped planar coordinates; SQL geography uses
+curved-earth edges. Especially for long edges, these interpretations can differ.
+There is **no automatic densification** or universal ellipsoidal MakeValid replacement.
+Applications must choose their edge interpretation and verify results in SQL Server.
+
+## Limits and performance
+
+Defaults: `maxPositions: 100000`, `maxDepth: 32`, `maxTopologyChecks: 1000000`, and
+`maxFeatures: 100000`. Limits apply per feature except the collection size limit.
+Bounding-box filtering removes irrelevant segment comparisons. Broad-phase pair work
+and containment checks are budgeted; dense/pathological shapes can still hit a limit.
+Raise limits explicitly only after measuring representative data.
+
+`sqlBinding` handles one spatial value. Database batching, SQL parameter limits and
+table-valued parameters remain the consuming application's responsibility.
+
+## Development and verification
+
+```sh
+npm ci
+npm test
+npm run test:types
+npm run format:check
+npm run benchmark
+node examples/v2.js
+```
+
+Tests are portable synthetic package tests, using Node's built-in runner. No private
+workspace repositories or customer systems are needed. Formatting uses a pinned
+transient Prettier invocation; Prettier is not a package dependency. Runtime dependencies
+provide geodesic calculations, clipping and projection; TypeScript is development-only.
+
+SQL tests are opt-in, use bound parameters and local SQL variables, and perform no
+table/schema/transaction writes or cleanup. Install `mssql` separately in your test
+environment, or set `SPATIAL_SQL_DRIVER` to its module URL. Set `SPATIAL_SQL_TEST=1`,
+`SPATIAL_TEST_DB_HOST`, `PORT`, `USER`, `PASSWORD` and `DATABASE` with the shared
+`SPATIAL_TEST_DB_` prefix. Certificate trust, if required, is an explicit
+`SPATIAL_TEST_TRUST_CERTIFICATE=1`. Run `npm run test:sql`. Optional
+`SPATIAL_TEST_REPORT` writes synthetic evidence locally. Never commit credentials.
+
+CI tests Node 22 and 24 and does not publish the package. Successful unit tests do not
+establish acceptance on every SQL Server version. Before deployment, verify SQL validity,
+SRID, intended area/containment and the application's complete save/read/map path.
+
+## References
+
+- [GeoJSON RFC 7946](https://www.rfc-editor.org/rfc/rfc7946)
+- [Esri geometry objects](https://developers.arcgis.com/rest/services-reference/enterprise/geometry-objects/)
+- [Esri FeatureSet](https://developers.arcgis.com/rest/services-reference/enterprise/featureset-object/)
+- [SQL Server spatial types](https://learn.microsoft.com/en-us/sql/relational-databases/spatial/spatial-data-types-overview)
+- [Proj4js](https://github.com/proj4js/proj4js)
+- [GeographicLib](https://github.com/geographiclib/geographiclib-js)
+- [polyclip-ts](https://github.com/luizbarboza/polyclip-ts)

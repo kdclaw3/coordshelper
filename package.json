@@ -1,9 +1,11 @@
 {
   "name": "coordshelper",
-  "version": "1.2.2",
+  "version": "2.0.0",
   "description": "Helper Utilities Preparing Spatial for insertion into a Microsoft SQL Database.",
   "files": [
-    "index.js"
+    "index.js",
+    "index.d.ts",
+    "lib"
   ],
   "keywords": [
     "esri",
@@ -20,12 +22,30 @@
   "author": "Dee Clawson",
   "license": "MIT",
   "scripts": {
-    "lint": "eslint . --ext=js --fix;  exit 0",
-    "test": "node ./examples/test.js"
+    "test": "node --test test/*.test.js",
+    "test:coverage": "node --test --experimental-test-coverage test/*.test.js",
+    "test:sql": "node --test test/sqlserver.test.js",
+    "test:types": "tsc --noEmit --strict --module NodeNext --moduleResolution NodeNext --target ES2022 test/types.mts",
+    "format:check": "npx --yes prettier@3.9.9 --check index.js index.d.ts lib test examples benchmarks .github package.json .prettierrc.json README.md",
+    "benchmark": "node benchmarks/topology.js"
   },
-  "peerDependencies": {},
-  "optionalDependencies": {},
   "dependencies": {
-    "proj4": "^2.7.5"
+    "geographiclib-geodesic": "2.2.0",
+    "polyclip-ts": "0.16.8",
+    "proj4": "2.22.0"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2"
+  },
+  "type": "module",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js"
+    }
   }
 }
