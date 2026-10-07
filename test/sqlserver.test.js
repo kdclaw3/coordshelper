@@ -65,7 +65,13 @@ test(
         CASE WHEN @g.STIsValid()=1 THEN @g.STArea() END AS area,
         CASE WHEN @g.STIsValid()=1 THEN @g.STIntersects(${r.spatialType}::STGeomFromText(@inside,@srid)) END AS inside,
         CASE WHEN @g.STIsValid()=1 THEN @g.STIntersects(${r.spatialType}::STGeomFromText(@outside,@srid)) END AS outside,
-        @g.AsTextZM() AS text;`)
+        @g.AsTextZM() AS text${
+          r.type === 'Point'
+            ? r.spatialType === 'geography'
+              ? ', @g.Long AS x, @g.Lat AS y'
+              : ', @g.STX AS x, @g.STY AS y'
+            : ''
+        };`)
         ).recordset[0];
       }
       async function check(name, r, extra = () => {}) {
@@ -146,7 +152,11 @@ test(
       await check(
         'tiny decimal coordinates',
         h.fromGeoJSON({ type: 'Point', coordinates: [1e-8, -1e-9] }),
-        (row) => assert.ok(row.text.includes('0.00000001')),
+        (row) => {
+          // SQL Server can serialize tiny values with exponents; verify the stored position.
+          assert.ok(Math.abs(row.x - 1e-8) < 1e-22);
+          assert.ok(Math.abs(row.y + 1e-9) < 1e-23);
+        },
       );
       for (const [name, g] of Object.entries(repairs))
         await check(`local repair: ${name}`, h.fromGeoJSON(g, { repair: 'topology' }));
