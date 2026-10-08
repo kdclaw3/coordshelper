@@ -1,0 +1,63 @@
+name: publish
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Stable version to publish (must match package.json and its tag)
+        required: true
+        default: 2.0.0
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: >-
+      github.repository == 'kdclaw3/coordshelper' &&
+      ((github.event_name == 'release' && !github.event.release.prerelease && !github.event.release.draft) ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - run: npm install --global npm@11.19.1
+      - name: Verify stable release and unchanged package source
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          VERSION=$(node --input-type=module -e "import fs from 'node:fs'; console.log(JSON.parse(fs.readFileSync('package.json', 'utf8')).version)")
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
+            [[ "$REQUESTED_VERSION" == "$VERSION" ]] || exit 1
+            RELEASE_TAG="v$VERSION"
+          else
+            [[ "$RELEASE_TAG" == "v$VERSION" ]] || exit 1
+          fi
+          git rev-parse --verify "refs/tags/$RELEASE_TAG^{commit}"
+          git merge-base --is-ancestor "refs/tags/$RELEASE_TAG" HEAD
+          # A manual run can add publishing configuration after a release tag.
+          # The library, dependencies and package metadata must still match it.
+          git diff --exit-code "refs/tags/$RELEASE_TAG" HEAD -- index.js index.d.ts lib package.json package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run test:types
+      - run: npm run format:check
+      - run: node examples/v2.js
+      - run: npm pack --dry-run
+      - name: Publish public package with trusted publishing
+        run: npm publish --access public --tag latest --provenance

@@ -14,10 +14,10 @@ coordshelper handles those steps for GeoJSON and Esri JSON. Supply a feature, co
 
 ## Install and requirements
 
-Install the tagged release from GitHub:
+Install version 2 from npm:
 
 ```sh
-npm install github:kdclaw3/coordshelper#v2.0.0
+npm install coordshelper@2
 ```
 
 - Node.js **22 or newer**, **ESM named imports**. TypeScript declarations are included.
