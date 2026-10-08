@@ -36,7 +36,20 @@ for (const size of [1000, 3000, 10000]) {
     -170 + (340 * i) / (size - 1),
     40 + 10 * Math.sin((i / size) * Math.PI),
   ]);
+  const worldwide = Array.from({ length: Math.floor(size / 50) }, (_, p) => {
+    const x = -175 + (p % 20) * 17.5,
+      y = -60 + Math.floor(p / 20) * 12;
+    return [circle(40, 0.25), circle(10, 0.1)].map((r) =>
+      r.map(([a, b]) => [x + a, y + b]),
+    );
+  });
   const cases = [
+    ['worldwide multipart holes', { type: 'MultiPolygon', coordinates: worldwide }],
+    [
+      'worldwide Esri rings',
+      { rings: worldwide.flatMap(([shell, hole]) => [shell.toReversed(), hole]) },
+      fromEsri,
+    ],
     ['circle', { type: 'Polygon', coordinates: [ring] }],
     ['east-west line', { type: 'LineString', coordinates: east }],
     ['north-south line', { type: 'LineString', coordinates: north }],

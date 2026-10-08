@@ -10,8 +10,12 @@ import {
   allTypes,
   globals,
 } from './fixtures.js';
-import { signedArea } from '../lib/polygons.js';
-import { context } from '../lib/common.js';
+import { planarArea } from '../lib/polygons.js';
+import { greatEllipseChart } from '../lib/great-ellipse.js';
+const chartArea = (ring) => {
+  const chart = greatEllipseChart([ring], '$');
+  return planarArea(ring.map((p) => chart.project(p)));
+};
 for (const g of allTypes)
   test(`RFC geometry: ${g.type}`, () => {
     const r = h.fromGeoJSON(g);
@@ -100,8 +104,8 @@ test('safe repair closes rings and removes exact duplicate vertices', () => {
 });
 test('shell and hole corrected independently', () => {
   const r = h.fromGeoJSON(repairs.wrongWinding);
-  assert.ok(signedArea(r.geometry.coordinates[0], context()) > 0);
-  assert.ok(signedArea(r.geometry.coordinates[1], context()) < 0);
+  assert.ok(chartArea(r.geometry.coordinates[0]) > 0);
+  assert.ok(chartArea(r.geometry.coordinates[1]) < 0);
   assert.equal(r.diagnostics.filter((d) => d.code === 'REWOUND').length, 2);
 });
 for (const name of topologyRepairs) {
@@ -133,16 +137,14 @@ test('topology repair cannot silently discard Z', () => {
   );
 });
 for (const g of globals)
-  test(`geodesic winding supports ${g.name}`, () => {
+  test(`great-ellipse chart winding supports ${g.name}`, () => {
     const r = h.fromGeoJSON(g.geometry);
-    assert.ok(signedArea(r.geometry.coordinates[0], context()) > 0);
+    assert.ok(chartArea(r.geometry.coordinates[0]) > 0);
     const reversed = {
       type: 'Polygon',
       coordinates: [[...g.geometry.coordinates[0]].reverse()],
     };
-    assert.ok(
-      signedArea(h.fromGeoJSON(reversed).geometry.coordinates[0], context()) > 0,
-    );
+    assert.ok(chartArea(h.fromGeoJSON(reversed).geometry.coordinates[0]) > 0);
   });
 test('strict repair policy rejects fixable malformed input', () => {
   for (const g of [

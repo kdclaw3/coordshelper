@@ -8,7 +8,7 @@ const feature = (geometry, id = 'a') => ({ attributes: { globalid: id }, geometr
 // Clockwise Esri outer ring, with two circular semicircles.
 
 test('RELEASE-01: the ESM example runs without credentials', () => {
-  const result = spawnSync(process.execPath, ['examples/v2.js'], {
+  const result = spawnSync(process.execPath, ['examples/v3.js'], {
     cwd: new URL('..', import.meta.url),
     encoding: 'utf8',
   });

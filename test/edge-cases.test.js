@@ -55,11 +55,8 @@ test('empty and absent inputs remain distinguishable', () => {
   );
   assert.equal(h.fromGeoJSON({ type: 'Point', coordinates: [] }).wkt, 'POINT EMPTY');
 });
-test('polar/global repair refuses planar clipping and preserved topology refuses guessing', () => {
-  assert.throws(
-    () => h.fromGeoJSON(globals[1].geometry, { repair: 'topology' }),
-    (e) => e.code === 'GLOBAL_REPAIR',
-  );
+test('chart-supported polar repair works and preserved topology refuses guessing', () => {
+  assert.doesNotThrow(() => h.fromGeoJSON(globals[1].geometry, { repair: 'topology' }));
   const bow = {
     type: 'Polygon',
     coordinates: [

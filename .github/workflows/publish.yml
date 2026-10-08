@@ -7,7 +7,7 @@ on:
       version:
         description: Stable version to publish (must match package.json and its tag)
         required: true
-        default: 2.0.0
+        default: 3.0.0
         type: string
 permissions:
   contents: read
@@ -57,7 +57,7 @@ jobs:
       - run: npm test
       - run: npm run test:types
       - run: npm run format:check
-      - run: node examples/v2.js
+      - run: node examples/v3.js
       - run: npm pack --dry-run
       - name: Publish public package with trusted publishing
         run: npm publish --access public --tag latest --provenance

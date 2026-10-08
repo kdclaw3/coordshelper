@@ -2,7 +2,24 @@ import { writeFileSync } from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as h from '../index.js';
+import {
+  worldwideParts,
+  worldwideHoles,
+  polarCap,
+  polarBowtie,
+  datelineBowtie,
+  containingParts,
+  polarContainingParts,
+} from './geography-atlas-fixtures.js';
 import { projectedControls, optionsFor } from './projected-wkt-fixtures.js';
+import {
+  notch,
+  curvedHole,
+  curvedParts,
+  greatEllipseOverlap,
+  shortOverlap,
+  geographyControls,
+} from './geography-fixtures.js';
 import {
   allTypes,
   repairs,
@@ -90,6 +107,257 @@ test(
           await extra(row);
         });
       }
+      for (const [name, input] of [
+        ['worldwide independent parts', worldwideParts],
+        ['worldwide shells and holes', worldwideHoles],
+        ['chart-supported polar cap', polarCap],
+        ['polar self-crossing repair', polarBowtie],
+        ['antimeridian canonical repair', datelineBowtie],
+      ])
+        await check(
+          `geography atlas: ${name}`,
+          h.fromGeoJSON(input, { repair: 'topology' }),
+        );
+      await check(
+        'geography atlas: Esri worldwide shells and holes',
+        h.fromEsri({
+          rings: worldwideHoles.coordinates.flatMap(([s, hole]) => [
+            hole,
+            s.toReversed(),
+          ]),
+        }),
+      );
+      await check(
+        'geography atlas: sub-metre overlap repair',
+        h.fromGeoJSON(
+          {
+            type: 'MultiPolygon',
+            coordinates: [
+              [square(-83, 43, 0.000001)],
+              [square(-82.9999995, 43.0000005, 0.000001)],
+            ],
+          },
+          { repair: 'topology' },
+        ),
+      );
+      await check(
+        'geography atlas: worldwide Esri islands within holes',
+        h.fromEsri({
+          rings: worldwideHoles.coordinates
+            .flatMap(([s, hole]) => {
+              const [x, y] = s[0];
+              return [square(x + 0.6, y + 0.6, 0.1).toReversed(), hole, s.toReversed()];
+            })
+            .toReversed(),
+        }),
+        (row) => assert.equal(row.parts, 8),
+      );
+      for (const [name, input] of [
+        ['contained parts', containingParts],
+        ['polar contained parts', polarContainingParts],
+      ]) {
+        await check(
+          `geography atlas union: ${name}`,
+          h.fromGeoJSON(input, { repair: 'topology' }),
+        );
+      }
+      await t.test(
+        'geography atlas: distant interiors and holes are not complements',
+        async () => {
+          const polar = await inspect(
+            h.fromGeoJSON(polarCap, { repair: 'topology' }),
+            [0, 89],
+            [0, 0],
+          );
+          assert.equal(polar.inside, true);
+          assert.equal(polar.outside, false);
+          assert.ok(polar.area > 0 && polar.area < 1e13);
+          evidence.push({ name: 'atlas polar interior probe', ...polar });
+          for (const input of [worldwideParts, worldwideHoles]) {
+            const result = h.fromGeoJSON(input);
+            for (const [shell] of input.coordinates) {
+              const [x, y] = shell[0];
+              const row = await inspect(result, [x + 0.2, y + 0.2], [0, 0]);
+              assert.equal(row.valid, true);
+              assert.equal(row.inside, true);
+              assert.equal(row.outside, false);
+              assert.equal(row.parts, 4);
+              assert.ok(row.area > 0 && row.area < 1e12);
+              evidence.push({ name: 'atlas interior probe', ...row });
+            }
+          }
+          const result = h.fromGeoJSON(worldwideHoles);
+          for (const [shell] of worldwideHoles.coordinates) {
+            const [x, y] = shell[0];
+            assert.equal((await inspect(result, [x + 0.75, y + 0.75])).inside, false);
+          }
+        },
+      );
+      for (const [name, input, errorCode] of [
+        ['near-touching notch', notch(), 'TOPOLOGY'],
+        ['curved shell crossing a hole', curvedHole, 'TOPOLOGY'],
+        ['curved multipart overlap', curvedParts, 'TOPOLOGY'],
+        ['great elliptic line overlap', greatEllipseOverlap, 'LINE_OVERLAP'],
+        ['short duplicate line overlap', shortOverlap, 'LINE_OVERLAP'],
+      ]) {
+        await t.test(`round-earth regression: ${name}`, async () => {
+          // Duplicate lines are invalid in both models, so serialize this trusted
+          // synthetic fixture directly to demonstrate the unguarded SQL failure.
+          const rawWkt =
+            input.type === 'MultiLineString'
+              ? `MULTILINESTRING (${input.coordinates.map((r) => `(${r.map((p) => p.join(' ')).join(',')})`).join(',')})`
+              : h.fromGeoJSON(input, { spatialType: 'geometry' }).wkt;
+          const row = (
+            await pool.request().input('wkt', sql.NVarChar(sql.MAX), rawWkt)
+              .query(`DECLARE @g geography=geography::STGeomFromText(@wkt,4326);
+              SELECT @g.STIsValid() AS valid,@g.IsValidDetailed() AS detail;`)
+          ).recordset[0];
+          evidence.push({ name: `invalid original: ${name}`, ...row });
+          assert.equal(row.valid, false);
+          assert.throws(
+            () => h.fromGeoJSON(input),
+            (e) => e.code === errorCode,
+          );
+        });
+        await check(
+          `explicit round-earth repair: ${name}`,
+          h.fromGeoJSON(input, { repair: 'topology' }),
+        );
+      }
+      for (const longitude of [0, -83, 179.999]) {
+        await check(
+          `valid notch clearance at longitude ${longitude}`,
+          h.fromGeoJSON(notch(0.000001, 45, longitude)),
+        );
+      }
+      for (const [name, geometry, code] of [
+        [
+          'preserved hole has the shell winding',
+          {
+            type: 'Polygon',
+            coordinates: [square(0, 0, 4), square(1, 1)],
+          },
+          'WINDING',
+        ],
+        [
+          'preserved complement overlaps another part',
+          {
+            type: 'MultiPolygon',
+            coordinates: [[square(0, 0, 4).toReversed()], [square(10, 0, 4)]],
+          },
+          'GEOGRAPHY_UNCERTAIN',
+        ],
+      ])
+        await t.test(`geography validity: ${name}`, async () => {
+          const raw = h.fromGeoJSON(geometry, {
+            spatialType: 'geometry',
+            orientation: 'preserve',
+          });
+          const row = (
+            await pool.request().input('wkt', sql.NVarChar(sql.MAX), raw.wkt)
+              .query(`DECLARE @g geography=geography::STGeomFromText(@wkt,4326);
+            SELECT @g.STIsValid() AS valid,@g.IsValidDetailed() AS detail;`)
+          ).recordset[0];
+          assert.equal(row.valid, false);
+          assert.throws(
+            () => h.fromGeoJSON(geometry, { orientation: 'preserve' }),
+            (e) => e.code === code,
+          );
+          evidence.push({ name: `invalid original: ${name}`, ...row });
+        });
+      await check(
+        'two shell contacts remain valid SQL geography',
+        h.fromGeoJSON({
+          type: 'Polygon',
+          coordinates: [
+            square(0, 0, 4),
+            [
+              [0, 2],
+              [2, 1],
+              [4, 2],
+              [2, 3],
+              [0, 2],
+            ],
+          ],
+        }),
+      );
+      await check(
+        'single touching hole keeps a connected geography interior',
+        h.fromGeoJSON({
+          type: 'Polygon',
+          coordinates: [
+            square(0, 0, 4),
+            [
+              [0, 2],
+              [1, 1],
+              [2, 2],
+              [1, 3],
+              [0, 2],
+            ],
+          ],
+        }),
+      );
+      const accepted = [];
+      for (const { name, geometry } of geographyControls())
+        for (const repair of ['safe', 'topology']) {
+          try {
+            accepted.push({
+              name: `${name}/${repair}`,
+              spatial: h.fromGeoJSON(geometry, { repair }),
+            });
+          } catch (error) {
+            assert.ok(error instanceof h.SpatialError);
+            assert.equal(repair, 'safe', `${name}: explicit repair must succeed`);
+            assert.ok(['TOPOLOGY', 'LINE_OVERLAP'].includes(error.code));
+            evidence.push({ name: `${name}/${repair}`, locallyRejected: error.code });
+          }
+        }
+      // Synthetic VALUES batches reduce integration-test latency only. The package
+      // still returns individual bindings and has no database execution dependency.
+      for (let start = 0; start < accepted.length; start += 40)
+        await t.test(`round-earth differential controls ${start}`, async () => {
+          const batch = accepted.slice(start, start + 40);
+          const request = pool.request();
+          batch.forEach(({ spatial }, i) =>
+            request.input(`w${i}`, sql.NVarChar(sql.MAX), spatial.wkt),
+          );
+          const rows = (
+            await request.query(`SELECT p.id,g.s.STIsValid() AS valid,
+            g.s.IsValidDetailed() AS detail FROM (VALUES ${batch.map((_, i) => `(${i},@w${i})`).join(',')}) p(id,wkt)
+            CROSS APPLY (SELECT geography::STGeomFromText(p.wkt,4326) AS s) g;`)
+          ).recordset;
+          for (const row of rows) {
+            const { name } = batch[row.id];
+            evidence.push({ name, valid: row.valid, detail: row.detail });
+            assert.equal(row.valid, true, `${name}: ${row.detail}`);
+          }
+        });
+      await t.test(
+        'repaired geography supports application spatial reads without MakeValid',
+        async () => {
+          for (const input of [notch(), curvedHole, curvedParts, greatEllipseOverlap]) {
+            const result = h.fromGeoJSON(input, { repair: 'topology' });
+            const row = (
+              await pool.request().input('wkt', sql.NVarChar(sql.MAX), result.wkt)
+                .query(`DECLARE @g geography=geography::STGeomFromText(@wkt,4326);
+              DECLARE @view geography=geography::STGeomFromText('POLYGON ((100 0,101 0,101 1,100 1,100 0))',4326);
+              SELECT @view.STIntersects(@g) AS intersects,@g.STDistance(geography::Point(0,100,4326)) AS distance,
+                @g.STArea() AS area,@g.STLength() AS length,
+                @g.STIntersection(@view).STIsValid() AS intersectionValid,
+                @g.STBuffer(1).STIsValid() AS bufferValid,@g.Reduce(0.001).STIsValid() AS reduceValid;`)
+            ).recordset[0];
+            assert.equal(row.intersects, false);
+            assert.ok(Number.isFinite(row.distance) && row.distance > 0);
+            assert.equal(row.intersectionValid, true);
+            assert.equal(row.bufferValid, true);
+            assert.equal(row.reduceValid, true);
+            evidence.push({
+              name: `spatial reads after repair: ${input.type}`,
+              ...row,
+            });
+          }
+        },
+      );
       for (const fixture of projectedControls) {
         await check(
           `Esri WKT1 ${fixture.name} preserves its known SQL control point`,

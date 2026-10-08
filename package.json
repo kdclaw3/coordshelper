@@ -1,6 +1,6 @@
 {
   "name": "coordshelper",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Helper Utilities Preparing Spatial for insertion into a Microsoft SQL Database.",
   "files": [
     "index.js",
@@ -30,7 +30,6 @@
     "benchmark": "node benchmarks/topology.js"
   },
   "dependencies": {
-    "geographiclib-geodesic": "2.2.0",
     "polyclip-ts": "0.16.8",
     "proj4": "2.22.0",
     "wkt-parser": "1.5.6"

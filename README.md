@@ -1,6 +1,6 @@
 # coordshelper
 
-Convert GeoJSON and Esri JSON into validated, parameter-ready SQL Server `geography` and `geometry` values, with ring orientation, explicit repairs and diagnostics.
+Convert GeoJSON and Esri JSON into parameter-ready SQL Server `geography` and `geometry` values, with local topology checks, ring orientation, explicit repairs and diagnostics.
 
 [![npm](https://img.shields.io/npm/v/coordshelper)](https://www.npmjs.com/package/coordshelper)
 [![CI](https://github.com/kdclaw3/coordshelper/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/kdclaw3/coordshelper/actions/workflows/test.yml)
@@ -14,17 +14,15 @@ coordshelper handles those steps for GeoJSON and Esri JSON. Supply a feature, co
 
 ## Install and requirements
 
-Install version 2 from npm:
+Install version 3 from npm:
 
 ```sh
-npm install coordshelper@2
+npm install coordshelper@3
 ```
 
 - Node.js **22 or newer**, **ESM named imports**. TypeScript declarations are included.
 - SQL acceptance tested against **SQL Server 2019**, engine 15.0.4198.2, compatibility level 150.
 - A database driver is optional. Install `mssql` to run the SQL example below.
-
-The API below is the 2.x interface. See [Migrating from v1](#migrating-from-v1) for existing installations.
 
 ## Quick start
 
@@ -109,7 +107,9 @@ GeoJSON supports Point, MultiPoint, LineString, MultiLineString, Polygon, MultiP
 
 `geometry` is the normalized geometry, and `wkt` is its SQL text representation. Input objects are not mutated. A null geometry returns `null`; an empty shape returns a spatial result with typed WKT such as `POINT EMPTY`.
 
-`validation.structural` records completed local structural checks. `sqlServerValidated` is always `false`: the library does not contact a database. `topologyChecks` is charged topology work, not elapsed time. Validate the resulting value and intended interior in your SQL engine.
+`validation.structural` records completed local structural checks. Linear geography topology is checked using great elliptic edges; planar geometry uses straight Cartesian edges. `sqlServerValidated` is always `false`: the library does not contact a database or certify acceptance by every SQL Server version. `topologyChecks` is charged topology work, not elapsed time.
+
+Check diagnostics before saving a result. `SQL_VALIDATION_REQUIRED` means the supplied curve representation still needs target-engine topology and interior verification. Test representative data against your target SQL Server version before using the output in production.
 
 `sqlBinding(result)` returns:
 
@@ -127,61 +127,61 @@ GeoJSON supports Point, MultiPoint, LineString, MultiLineString, Polygon, MultiP
 
 Diagnostics are `{ code, path, detail }` entries on a successful spatial result. Ring paths identify the source ring, including original Esri ring indices after classification. Topology-generated rings use a `.repaired[...]` suffix when their provenance is available.
 
-| Code                      | Meaning                                                               |
-| ------------------------- | --------------------------------------------------------------------- |
-| `CLOSED_RING`             | Appended the first position to close a ring                           |
-| `DEDUPLICATED`            | Removed consecutive identical positions                               |
-| `REWOUND`                 | Reversed a shell or hole to the required winding                      |
-| `CANONICAL_LONGITUDE`     | Represented longitude +180 as -180                                    |
-| `TOPOLOGY_REPAIRED`       | Rebuilt polygon topology under the selected policy                    |
-| `LINE_OVERLAP_REPAIRED`   | Isolated overlapping line traversals in a GeometryCollection          |
-| `ESRI_RING_REPAIRED`      | Simplified an Esri ring before classifying its role                   |
-| `EMPTY_POINT_OMITTED`     | Omitted an empty Esri MultiPoint member; path identifies that member  |
-| `NAD83_ZERO_SHIFT`        | Used the caller-approved approximate NAD83/WGS84 datum alignment      |
-| `SQL_VALIDATION_REQUIRED` | SQL engine verification is needed for curved or global interpretation |
+| Code                      | Meaning                                                              |
+| ------------------------- | -------------------------------------------------------------------- |
+| `CLOSED_RING`             | Appended the first position to close a ring                          |
+| `DEDUPLICATED`            | Removed consecutive identical positions                              |
+| `REWOUND`                 | Reversed a shell or hole to the required winding                     |
+| `CANONICAL_LONGITUDE`     | Represented longitude +180 as -180                                   |
+| `TOPOLOGY_REPAIRED`       | Rebuilt polygon topology under the selected policy                   |
+| `LINE_OVERLAP_REPAIRED`   | Isolated overlapping line traversals in a GeometryCollection         |
+| `ESRI_RING_REPAIRED`      | Simplified an Esri ring before classifying its role                  |
+| `EMPTY_POINT_OMITTED`     | Omitted an empty Esri MultiPoint member; path identifies that member |
+| `NAD83_ZERO_SHIFT`        | Used the caller-approved approximate NAD83/WGS84 datum alignment     |
+| `SQL_VALIDATION_REQUIRED` | SQL engine verification is needed for curve topology and interior    |
 
 ### Error codes
 
 `SpatialError` exposes `code`, `path` and `detail`. Wrappers retain the original thrown value as `cause`. Collection recovery fields are described below.
 
-| Cause         | Code               | Meaning                                                                |
-| ------------- | ------------------ | ---------------------------------------------------------------------- |
-| Input         | `SHAPE`            | Expected an object or dense array of the required shape                |
-| Input         | `TYPE`             | Unsupported type, conflicting type metadata or wrong collection member |
-| Input         | `DIMENSION`        | Invalid/mixed dimensions or conflicting Z/M declarations               |
-| Input         | `COORDINATE`       | A coordinate is not a finite number                                    |
-| Input         | `LONGITUDE`        | Longitude is outside -180 to 180                                       |
-| Input         | `LATITUDE`         | Latitude is outside -90 to 90                                          |
-| Input         | `EMPTY_COMPONENT`  | An empty component occurs inside a nonempty polygon                    |
-| Input         | `COLLAPSED`        | Too few distinct positions or zero/unstable area                       |
-| Input         | `CLOSURE`          | Closure shares XY but disagrees in Z/M                                 |
-| Input         | `UNCLOSED`         | An open ring requires a repair the caller disabled                     |
-| Input         | `DUPLICATE`        | Consecutive duplicate positions require a disabled repair              |
-| Input         | `ENVELOPE`         | Extent minima are not smaller than maxima                              |
-| Input         | `ANTIPODAL`        | A geography edge has antipodal endpoints                               |
-| Topology      | `TOPOLOGY`         | Invalid polygon topology or failed topology repair                     |
-| Topology      | `WINDING`          | Incorrect ring winding, or invalid orientation option                  |
-| Topology      | `LINE_OVERLAP`     | Overlapping line traversals require explicit repair                    |
-| Topology      | `ESRI_RING`        | Esri shell/hole roles are ambiguous                                    |
-| Topology      | `ESRI_GLOBAL`      | Polar/global Esri rings need explicit shell/hole roles                 |
-| Topology      | `GLOBAL_REPAIR`    | Planar repair cannot infer a global or preserved interior              |
-| Topology      | `REPAIR_DIMENSION` | Topology repair would discard Z/M                                      |
-| Curves        | `CURVE`            | Malformed or unsupported curve structure                               |
-| Curves        | `CURVE_CRS`        | Curved input requires reprojection that cannot preserve its arcs       |
-| Curves        | `CURVE_GLOBAL`     | Curved geography lies outside supported local extents                  |
-| Curves        | `CURVE_REPAIR`     | A straight repair changes a curve section/ring's type                  |
-| Curves        | `CURVE_TOPOLOGY`   | Curved ring nesting, crossings or contacts are ambiguous               |
-| Curves        | `CURVE_WINDING`    | Requested curved-ring orientation policy is unsupported                |
-| Target/CRS    | `CRS`              | Missing, unsupported, conflicting or unapproved projection/datum       |
-| Target/CRS    | `SRID`             | Invalid SRID or unsupported geography SRID                             |
-| Target/CRS    | `TARGET`           | SQL target must be geography or geometry                               |
-| Configuration | `OPTIONS`          | Invalid options object or option value                                 |
-| Configuration | `REPAIR`           | Unknown repair policy                                                  |
-| Configuration | `FORMAT`           | Unknown adapter format                                                 |
-| Configuration | `BINDING`          | Invalid spatial result or SQL parameter names                          |
-| Configuration | `LIMIT`            | Invalid limit or processing budget exceeded                            |
-| Configuration | `IDENTITY`         | Ambiguous case-insensitive Esri identifier fields                      |
-| Unexpected    | `INTERNAL`         | Unexpected collection failure; inspect the original `cause`            |
+| Cause         | Code                  | Meaning                                                                   |
+| ------------- | --------------------- | ------------------------------------------------------------------------- |
+| Input         | `SHAPE`               | Expected an object or dense array of the required shape                   |
+| Input         | `TYPE`                | Unsupported type, conflicting type metadata or wrong collection member    |
+| Input         | `DIMENSION`           | Invalid/mixed dimensions or conflicting Z/M declarations                  |
+| Input         | `COORDINATE`          | A coordinate is not a finite number                                       |
+| Input         | `LONGITUDE`           | Longitude is outside -180 to 180                                          |
+| Input         | `LATITUDE`            | Latitude is outside -90 to 90                                             |
+| Input         | `EMPTY_COMPONENT`     | An empty component occurs inside a nonempty polygon                       |
+| Input         | `COLLAPSED`           | Too few distinct positions or zero/unstable area                          |
+| Input         | `CLOSURE`             | Closure shares XY but disagrees in Z/M                                    |
+| Input         | `UNCLOSED`            | An open ring requires a repair the caller disabled                        |
+| Input         | `DUPLICATE`           | Consecutive duplicate positions require a disabled repair                 |
+| Input         | `ENVELOPE`            | Extent minima are not smaller than maxima                                 |
+| Input         | `ANTIPODAL`           | A geography edge has antipodal endpoints                                  |
+| Topology      | `TOPOLOGY`            | Invalid polygon topology or failed topology repair                        |
+| Topology      | `WINDING`             | Incorrect ring winding, or invalid orientation option                     |
+| Topology      | `LINE_OVERLAP`        | Overlapping line traversals require explicit repair                       |
+| Topology      | `ESRI_RING`           | Esri shell/hole roles are ambiguous                                       |
+| Topology      | `GEOGRAPHY_UNCERTAIN` | The local geography model cannot establish supported topology or interior |
+| Topology      | `GLOBAL_REPAIR`       | Topology repair was requested for a deliberately preserved interior       |
+| Topology      | `REPAIR_DIMENSION`    | Topology repair would discard Z/M                                         |
+| Curves        | `CURVE`               | Malformed or unsupported curve structure                                  |
+| Curves        | `CURVE_CRS`           | Curved input requires reprojection that cannot preserve its arcs          |
+| Curves        | `CURVE_GLOBAL`        | Curved geography lies outside supported local extents                     |
+| Curves        | `CURVE_REPAIR`        | A straight repair changes a curve section/ring's type                     |
+| Curves        | `CURVE_TOPOLOGY`      | Curved ring nesting, crossings or contacts are ambiguous                  |
+| Curves        | `CURVE_WINDING`       | Requested curved-ring orientation policy is unsupported                   |
+| Target/CRS    | `CRS`                 | Missing, unsupported, conflicting or unapproved projection/datum          |
+| Target/CRS    | `SRID`                | Invalid SRID or unsupported geography SRID                                |
+| Target/CRS    | `TARGET`              | SQL target must be geography or geometry                                  |
+| Configuration | `OPTIONS`             | Invalid options object or option value                                    |
+| Configuration | `REPAIR`              | Unknown repair policy                                                     |
+| Configuration | `FORMAT`              | Unknown adapter format                                                    |
+| Configuration | `BINDING`             | Invalid spatial result or SQL parameter names                             |
+| Configuration | `LIMIT`               | Invalid limit or processing budget exceeded                               |
+| Configuration | `IDENTITY`            | Ambiguous case-insensitive Esri identifier fields                         |
+| Unexpected    | `INTERNAL`            | Unexpected collection failure; inspect the original `cause`               |
 
 ## Options
 
@@ -359,15 +359,44 @@ See [Esri geometry objects](https://developers.arcgis.com/rest/services-referenc
 
 ## Repair policies
 
-| Policy                     | Behavior                                                                                     |
-| -------------------------- | -------------------------------------------------------------------------------------------- |
-| `repair: 'none'`           | Reject required closure, duplicate removal or winding changes                                |
-| `repair: 'safe'` (default) | Close rings, remove exact consecutive duplicates and normalize winding; diagnose each change |
-| `repair: 'topology'`       | Enable local topology repair; may change geometry type, vertices or part count               |
+| Policy                     | Behavior                                                                                                                 |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `repair: 'none'`           | Check topology; reject required closure, duplicate removal or winding changes                                            |
+| `repair: 'safe'` (default) | Close rings, remove exact consecutive duplicates and normalize winding; diagnose each change and reject invalid topology |
+| `repair: 'topology'`       | Attempt explicit topology repair; may change geometry type, vertices or part count, and can still fail                   |
 
-Geography winding uses ellipsoidal area; shells are counterclockwise and holes clockwise. `orientation: 'preserve'` retains deliberate interiors for ordinary GeoJSON/explicit spatial input.
+Linear polygon shells are oriented counterclockwise and holes clockwise. Geography winding is determined in the same great-ellipse chart used for topology checks. `orientation: 'preserve'` can retain a single clockwise geography shell to select its larger complementary interior. Preserved complementary interiors involving holes or multipart polygons raise `GEOGRAPHY_UNCERTAIN`; preserved holes in an ordinary geography shell must be clockwise.
 
-Polygon topology repair uses nonzero shell union minus holes. Esri classification supports disjoint shells, holes and islands; explicit repair can union consistently clockwise shells. Mixed-role crossing rings remain ambiguous. Line repair keeps directed traversal and Z/M in a GeometryCollection, splitting affected runs while retaining unaffected ones. Type-changing repairs inside CompoundCurve/CurvePolygon raise `CURVE_REPAIR`.
+Polygon topology repair uses nonzero shell union minus holes. For geography, this runs in a central projection where great elliptic edges are straight, then converts repaired vertices back to longitude/latitude. Planar geometry repair operates on XY coordinates. Polygon repair refuses changes that would discard Z/M. Esri classification supports disjoint shells, holes and islands; explicit repair can union consistently clockwise shells. Mixed-role crossing rings remain ambiguous. Line repair keeps directed traversal and Z/M in a GeometryCollection, splitting affected runs while retaining unaffected ones. Type-changing repairs inside CompoundCurve/CurvePolygon raise `CURVE_REPAIR`.
+
+### Handling invalid input
+
+With the default safe policy, polygon self-intersections, holes crossing their shell, overlapping polygon parts and overlapping line traversals are rejected. A rejected individual feature throws `SpatialError` without returning a spatial result. Collection adapters can report each failure and continue, as described under [Collections](#collections).
+
+```js
+import { fromGeoJSON, SpatialError } from 'coordshelper';
+
+try {
+  const result = fromGeoJSON({
+    type: 'Polygon',
+    coordinates: [
+      [
+        [0, 0],
+        [2, 2],
+        [0, 2],
+        [2, 0],
+        [0, 0],
+      ],
+    ],
+  });
+  console.log(result.wkt);
+} catch (error) {
+  if (!(error instanceof SpatialError)) throw error;
+  console.error(error.code, error.path, error.detail); // TOPOLOGY at $.coordinates
+}
+```
+
+Use `repair: 'topology'` when your application permits topology changes, then inspect the returned geometry type and diagnostics. Repairs are performed locally; `sqlBinding` never adds `.MakeValid()` or executes SQL.
 
 ## Limits
 
@@ -389,41 +418,12 @@ Measure representative shapes before raising limits. Aggregate work includes fai
 - Conversion does not fetch GIS data, execute SQL, create records, normalize UUIDs, enforce unique IDs or schedule synchronization.
 - Geography targets WGS84 **SRID 4326 only**. An SRID label alone is not reprojection. Unrecognized WKIDs need explicit configuration; numeric ranges do not determine their namespace.
 - CRS comparison is conservative, not a universal equivalence solver. Axis declarations are compared, but input XY order is retained. Dynamic, bound, compound/vertical and unresolved datum transformations need an explicit verified converter. Z/M are retained without vertical transformation.
-- Polygon topology checks use unwrapped planar edges; SQL geography uses curved-earth edges. Long edges can differ. There is no automatic densification or universal ellipsoidal repair. Verify SQL validity, interior, area and containment.
+- Linear geography checks use SQL Server's great elliptic edge model for intersections, hole containment, polygon-part overlap, winding and line overlap. Each polygon uses its own central-projection chart, so small MultiPolygon parts can be distributed worldwide. Conservative 3D bounds include filled interiors; only potentially interacting parts need a shared chart. Esri linear rings use the same approach for shell/hole classification. Each polygon boundary and each comparison or repair group must fit an open hemisphere with a numerical margin from the chart horizon. Dateline and polar boundaries are supported when they meet that condition. The bounded chart search can still conservatively reject some SQL-valid individual boundaries or interacting groups with `GEOGRAPHY_UNCERTAIN`. Degenerate or nearly antipodal linear edges also raise this error; exactly antipodal edges raise `ANTIPODAL`.
 - Curved reprojection, elliptical/Bezier arcs and ambiguous curved crossings/contacts are unsupported. Esri curved geography classification is limited to non-polar extents up to 10° wide/high within ±80° latitude. Explicit spatial curved winding is preserved for SQL verification; Esri curved rings do not support `orientation: 'preserve'`.
-- Planar topology repair is refused for global/polar shapes, preserved interiors and repairs that lose Z/M. Sparse arrays, mixed dimensions and inconsistent closure are rejected.
+- Explicit topology repair supports chart-compatible polar and dateline polygons. It is refused for invalid deliberately preserved interiors and polygon repairs that lose Z/M. Repaired vertices pass coordinate and ring validation in the target CRS, including canonical longitude and closure checks; these output positions also count toward position limits. Sparse arrays, mixed dimensions and inconsistent closure are rejected.
+- Local checks use finite-precision arithmetic and are not a universal SQL-validity guarantee. Actual circular curves retain `SQL_VALIDATION_REQUIRED`; their curved-earth topology is not certified by the linear-edge validator. There is no automatic densification or SQL `MakeValid` fallback.
 - WKT expands decimal numbers within a conservative literal budget and uses lossless scientific notation for longer expansions. It does not round coordinates to fit the SQL reader.
 - `sqlBinding` handles one value. Driver choice, batching, SQL parameter limits and table-valued parameters belong to the application. Validate acceptance on your target SQL Server version.
-
-## Migrating from v1
-
-The 2.x API replaces the CommonJS 1.x interface; there is no compatibility wrapper. Upgrade an existing 1.x installation before using these named exports.
-
-| v1 usage/behavior                                        | 2.x replacement                                                            |
-| -------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `require('coordshelper')`                                | ESM named imports on Node ≥22                                              |
-| `helper.geometry(geoJSONFeature, cs)`                    | `fromGeoJSON(feature, { sourceCrs: cs })`, then `sqlBinding(result)`       |
-| `helper.geometry(esriFeature, cs)`                       | `fromEsri(feature, { sourceCrs: cs })`, then `sqlBinding(result)`          |
-| Returned SQL string with embedded WKT and `.MakeValid()` | Structured spatial result plus bound WKT/SRID parameters; explicit repairs |
-| `mapping` constructor table                              | `GEO_TYPES`/`SQL_TYPES` for types and `sqlBinding` for constructors        |
-| `recurse` and `isAntiClockwise`                          | Conversion performs traversal and winding; inspect diagnostics             |
-| `gridLocation`                                           | Removed; keep grid generation in the application                           |
-| Plain NAD83 source projected automatically               | Opt in to approximate zero shift or provide a verified transformation      |
-| No aggregate conversion budgets                          | Configure collection limits and page large inputs                          |
-| Invalid input often returned `null`                      | Catch `SpatialError`; `null` now means absent geometry                     |
-
-```js
-import { fromEsri, sqlBinding } from 'coordshelper';
-
-const feature = { geometry: { x: 1113194.9079327357, y: 0 } };
-const spatial = fromEsri(feature, { sourceCrs: 'EPSG:3857' });
-if (spatial) {
-  const binding = sqlBinding(spatial);
-  console.log(binding.expression, binding.parameters);
-}
-```
-
-Review saved geometry when migrating: corrected ring roles, complete multipart output, dimensional preservation and explicit repairs can produce different results from 1.x. Shape metadata no longer needs a synthetic Esri `geometry.type` when the geometry or wrapper identifies the type.
 
 ## License and contributions
 
