@@ -145,44 +145,44 @@ Diagnostics are `{ code, path, detail }` entries on a successful spatial result.
 
 `SpatialError` exposes `code`, `path` and `detail`. Wrappers retain the original thrown value as `cause`. Collection recovery fields are described below.
 
-| Cause         | Code                  | Meaning                                                                   |
-| ------------- | --------------------- | ------------------------------------------------------------------------- |
-| Input         | `SHAPE`               | Expected an object or dense array of the required shape                   |
-| Input         | `TYPE`                | Unsupported type, conflicting type metadata or wrong collection member    |
-| Input         | `DIMENSION`           | Invalid/mixed dimensions or conflicting Z/M declarations                  |
-| Input         | `COORDINATE`          | A coordinate is not a finite number                                       |
-| Input         | `LONGITUDE`           | Longitude is outside -180 to 180                                          |
-| Input         | `LATITUDE`            | Latitude is outside -90 to 90                                             |
-| Input         | `EMPTY_COMPONENT`     | An empty component occurs inside a nonempty polygon                       |
-| Input         | `COLLAPSED`           | Too few distinct positions or zero/unstable area                          |
-| Input         | `CLOSURE`             | Closure shares XY but disagrees in Z/M                                    |
-| Input         | `UNCLOSED`            | An open ring requires a repair the caller disabled                        |
-| Input         | `DUPLICATE`           | Consecutive duplicate positions require a disabled repair                 |
-| Input         | `ENVELOPE`            | Extent minima are not smaller than maxima                                 |
-| Input         | `ANTIPODAL`           | A geography edge has antipodal endpoints                                  |
-| Topology      | `TOPOLOGY`            | Invalid polygon topology or failed topology repair                        |
-| Topology      | `WINDING`             | Incorrect ring winding, or invalid orientation option                     |
-| Topology      | `LINE_OVERLAP`        | Overlapping line traversals require explicit repair                       |
-| Topology      | `ESRI_RING`           | Esri shell/hole roles are ambiguous                                       |
-| Topology      | `GEOGRAPHY_UNCERTAIN` | The local geography model cannot establish supported topology or interior |
-| Topology      | `GLOBAL_REPAIR`       | Topology repair was requested for a deliberately preserved interior       |
-| Topology      | `REPAIR_DIMENSION`    | Topology repair would discard Z/M                                         |
-| Curves        | `CURVE`               | Malformed or unsupported curve structure                                  |
-| Curves        | `CURVE_CRS`           | Curved input requires reprojection that cannot preserve its arcs          |
-| Curves        | `CURVE_GLOBAL`        | Curved geography lies outside supported local extents                     |
-| Curves        | `CURVE_REPAIR`        | A straight repair changes a curve section/ring's type                     |
-| Curves        | `CURVE_TOPOLOGY`      | Curved ring nesting, crossings or contacts are ambiguous                  |
-| Curves        | `CURVE_WINDING`       | Requested curved-ring orientation policy is unsupported                   |
-| Target/CRS    | `CRS`                 | Missing, unsupported, conflicting or unapproved projection/datum          |
-| Target/CRS    | `SRID`                | Invalid SRID or unsupported geography SRID                                |
-| Target/CRS    | `TARGET`              | SQL target must be geography or geometry                                  |
-| Configuration | `OPTIONS`             | Invalid options object or option value                                    |
-| Configuration | `REPAIR`              | Unknown repair policy                                                     |
-| Configuration | `FORMAT`              | Unknown adapter format                                                    |
-| Configuration | `BINDING`             | Invalid spatial result or SQL parameter names                             |
-| Configuration | `LIMIT`               | Invalid limit or processing budget exceeded                               |
-| Configuration | `IDENTITY`            | Ambiguous case-insensitive Esri identifier fields                         |
-| Unexpected    | `INTERNAL`            | Unexpected collection failure; inspect the original `cause`               |
+| Cause         | Code                  | Meaning                                                                                     |
+| ------------- | --------------------- | ------------------------------------------------------------------------------------------- |
+| Input         | `SHAPE`               | Expected an object or dense array of the required shape                                     |
+| Input         | `TYPE`                | Unsupported type, conflicting type metadata or wrong collection member                      |
+| Input         | `DIMENSION`           | Invalid/mixed dimensions or conflicting Z/M declarations                                    |
+| Input         | `COORDINATE`          | A coordinate is not a finite number                                                         |
+| Input         | `LONGITUDE`           | Longitude is outside -180 to 180                                                            |
+| Input         | `LATITUDE`            | Latitude is outside -90 to 90                                                               |
+| Input         | `EMPTY_COMPONENT`     | An empty component occurs inside a nonempty polygon                                         |
+| Input         | `COLLAPSED`           | Too few distinct positions or zero/unstable area                                            |
+| Input         | `CLOSURE`             | Closure shares XY but disagrees in Z/M                                                      |
+| Input         | `UNCLOSED`            | An open ring requires a repair the caller disabled                                          |
+| Input         | `DUPLICATE`           | Consecutive duplicate positions require a disabled repair                                   |
+| Input         | `ENVELOPE`            | Extent minima are not smaller than maxima                                                   |
+| Input         | `ANTIPODAL`           | A geography edge has antipodal endpoints                                                    |
+| Topology      | `TOPOLOGY`            | Invalid polygon topology or failed topology repair                                          |
+| Topology      | `WINDING`             | Incorrect ring winding, or invalid orientation option                                       |
+| Topology      | `LINE_OVERLAP`        | Overlapping line traversals require explicit repair; deduplication refuses partial overlaps |
+| Topology      | `ESRI_RING`           | Esri shell/hole roles are ambiguous                                                         |
+| Topology      | `GEOGRAPHY_UNCERTAIN` | The local geography model cannot establish supported topology or interior                   |
+| Topology      | `GLOBAL_REPAIR`       | Topology repair was requested for a deliberately preserved interior                         |
+| Topology      | `REPAIR_DIMENSION`    | Topology repair would discard Z/M                                                           |
+| Curves        | `CURVE`               | Malformed or unsupported curve structure                                                    |
+| Curves        | `CURVE_CRS`           | Curved input requires reprojection that cannot preserve its arcs                            |
+| Curves        | `CURVE_GLOBAL`        | Curved geography lies outside supported local extents                                       |
+| Curves        | `CURVE_REPAIR`        | A straight repair changes a curve section/ring's type                                       |
+| Curves        | `CURVE_TOPOLOGY`      | Curved ring nesting, crossings or contacts are ambiguous                                    |
+| Curves        | `CURVE_WINDING`       | Requested curved-ring orientation policy is unsupported                                     |
+| Target/CRS    | `CRS`                 | Missing, unsupported, conflicting or unapproved projection/datum                            |
+| Target/CRS    | `SRID`                | Invalid SRID or unsupported geography SRID                                                  |
+| Target/CRS    | `TARGET`              | SQL target must be geography or geometry                                                    |
+| Configuration | `OPTIONS`             | Invalid options object or option value                                                      |
+| Configuration | `REPAIR`              | Invalid repair/lineOverlap policy, or deduplication requested without topology repair       |
+| Configuration | `FORMAT`              | Unknown adapter format                                                                      |
+| Configuration | `BINDING`             | Invalid spatial result or SQL parameter names                                               |
+| Configuration | `LIMIT`               | Invalid limit or processing budget exceeded                                                 |
+| Configuration | `IDENTITY`            | Ambiguous case-insensitive Esri identifier fields                                           |
+| Unexpected    | `INTERNAL`            | Unexpected collection failure; inspect the original `cause`                                 |
 
 ## Options
 
