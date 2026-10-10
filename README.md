@@ -127,18 +127,19 @@ Check diagnostics before saving a result. `SQL_VALIDATION_REQUIRED` means the su
 
 Diagnostics are `{ code, path, detail }` entries on a successful spatial result. Ring paths identify the source ring, including original Esri ring indices after classification. Topology-generated rings use a `.repaired[...]` suffix when their provenance is available.
 
-| Code                      | Meaning                                                              |
-| ------------------------- | -------------------------------------------------------------------- |
-| `CLOSED_RING`             | Appended the first position to close a ring                          |
-| `DEDUPLICATED`            | Removed consecutive identical positions                              |
-| `REWOUND`                 | Reversed a shell or hole to the required winding                     |
-| `CANONICAL_LONGITUDE`     | Represented longitude +180 as -180                                   |
-| `TOPOLOGY_REPAIRED`       | Rebuilt polygon topology under the selected policy                   |
-| `LINE_OVERLAP_REPAIRED`   | Isolated overlapping line traversals in a GeometryCollection         |
-| `ESRI_RING_REPAIRED`      | Simplified an Esri ring before classifying its role                  |
-| `EMPTY_POINT_OMITTED`     | Omitted an empty Esri MultiPoint member; path identifies that member |
-| `NAD83_ZERO_SHIFT`        | Used the caller-approved approximate NAD83/WGS84 datum alignment     |
-| `SQL_VALIDATION_REQUIRED` | SQL engine verification is needed for curve topology and interior    |
+| Code                        | Meaning                                                                |
+| --------------------------- | ---------------------------------------------------------------------- |
+| `CLOSED_RING`               | Appended the first position to close a ring                            |
+| `DEDUPLICATED`              | Removed consecutive identical positions                                |
+| `REWOUND`                   | Reversed a shell or hole to the required winding                       |
+| `CANONICAL_LONGITUDE`       | Represented longitude +180 as -180                                     |
+| `TOPOLOGY_REPAIRED`         | Rebuilt polygon topology under the selected policy                     |
+| `LINE_OVERLAP_REPAIRED`     | Isolated overlapping line traversals in a GeometryCollection           |
+| `LINE_OVERLAP_DEDUPLICATED` | Removed exact duplicate line edges and reconnected the remaining paths |
+| `ESRI_RING_REPAIRED`        | Simplified an Esri ring before classifying its role                    |
+| `EMPTY_POINT_OMITTED`       | Omitted an empty Esri MultiPoint member; path identifies that member   |
+| `NAD83_ZERO_SHIFT`          | Used the caller-approved approximate NAD83/WGS84 datum alignment       |
+| `SQL_VALIDATION_REQUIRED`   | SQL engine verification is needed for curve topology and interior      |
 
 ### Error codes
 
@@ -187,35 +188,36 @@ Diagnostics are `{ code, path, detail }` entries on a successful spatial result.
 
 Pass conversion options as the second argument. Defaults apply when omitted. Limit options must be positive safe integers.
 
-| Name                     | Type                                               | Default                              | Description                                                                       |
-| ------------------------ | -------------------------------------------------- | ------------------------------------ | --------------------------------------------------------------------------------- |
-| `spatialType`            | `'geography' \| 'geometry'`                        | `'geography'`                        | SQL coordinate model                                                              |
-| `srid`                   | Integer                                            | 4326 geography; 0 geometry           | SQL SRID label; native Esri geometry can infer a numeric WKID                     |
-| `repair`                 | `'none' \| 'safe' \| 'topology'`                   | `'safe'`                             | Repair policy                                                                     |
-| `orientation`            | `'normalize' \| 'preserve'`                        | `'normalize'`                        | Normalize winding or retain intentional interiors                                 |
-| `sourceCrs`              | String                                             | WGS84 for GeoJSON; inferred for Esri | Explicit source definition or supported name                                      |
-| `targetCrs`              | String                                             | WGS84 for geography                  | Destination; required for projected planar output without a custom converter      |
-| `project`                | Boolean                                            | `true`                               | Set `false` for native planar coordinates                                         |
-| `projectionDefinitions`  | Name → PROJ/WKT string or parsed-definition object | None                                 | Local definitions for unsupported codes                                           |
-| `wkidAuthorities`        | Numeric WKID → `'EPSG' \| 'ESRI'`                  | Known aliases/authorities            | Choose the namespace; also supply a missing definition                            |
-| `converter`              | `([x, y]) => [x, y]`                               | None                                 | Caller-supplied finite XY transformation; takes priority over built-in projection |
-| `allowNad83ZeroShift`    | Boolean                                            | `false`                              | Opt in to the plain NAD83/WGS84 approximation                                     |
-| `spatialReference`       | `{ wkid?, latestWkid?, wkt?, wkt2? }`              | Esri metadata                        | Shared or individual source reference                                             |
-| `geometryType`           | Esri type-name string                              | Inferred                             | Esri wrapper/feature geometry type                                                |
-| `hasZ`                   | Boolean                                            | Esri metadata/inferred               | Declare elevation coordinates                                                     |
-| `hasM`                   | Boolean                                            | Esri metadata/inferred               | Declare measures                                                                  |
-| `maxPositions`           | Integer                                            | 100,000                              | Position budget per feature                                                       |
-| `maxDepth`               | Integer                                            | 32                                   | Geometry/coordinate nesting depth                                                 |
-| `maxTopologyChecks`      | Integer                                            | 1,000,000                            | Topology work budget per feature                                                  |
-| `maxComponents`          | Integer                                            | 10,000                               | Geometry objects, parts and rings per feature, including empty members            |
-| `maxFeatures`            | Integer                                            | 100,000                              | Features per collection                                                           |
-| `maxTotalPositions`      | Integer                                            | 1,000,000                            | Aggregate position budget per collection                                          |
-| `maxTotalTopologyChecks` | Integer                                            | 10,000,000                           | Aggregate topology work budget per collection                                     |
-| `maxTotalWktBytes`       | Integer                                            | 67,108,864                           | Aggregate generated ASCII WKT bytes (64 MiB)                                      |
-| `onError`                | `'collect' \| 'throw'`                             | `'collect'`                          | Collection per-feature failure handling                                           |
-| `format`                 | `'geojson' \| 'esri' \| 'spatial'`                 | Auto-detect                          | `toSqlSpatial` only: select adapter                                               |
-| `wktParameter`           | SQL parameter-name string                          | `'wkt'`                              | `sqlBinding` only: WKT binding name                                               |
-| `sridParameter`          | SQL parameter-name string                          | `'srid'`                             | `sqlBinding` only: SRID binding name; must differ from WKT name                   |
+| Name                     | Type                                               | Default                              | Description                                                                                                            |
+| ------------------------ | -------------------------------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| `spatialType`            | `'geography' \| 'geometry'`                        | `'geography'`                        | SQL coordinate model                                                                                                   |
+| `srid`                   | Integer                                            | 4326 geography; 0 geometry           | SQL SRID label; native Esri geometry can infer a numeric WKID                                                          |
+| `repair`                 | `'none' \| 'safe' \| 'topology'`                   | `'safe'`                             | Repair policy                                                                                                          |
+| `lineOverlap`            | `'preserve' \| 'deduplicate'`                      | `'preserve'`                         | With `repair: 'topology'`, remove exact repeated/reversed line edges; partial overlaps and conflicting Z/M are refused |
+| `orientation`            | `'normalize' \| 'preserve'`                        | `'normalize'`                        | Normalize winding or retain intentional interiors                                                                      |
+| `sourceCrs`              | String                                             | WGS84 for GeoJSON; inferred for Esri | Explicit source definition or supported name                                                                           |
+| `targetCrs`              | String                                             | WGS84 for geography                  | Destination; required for projected planar output without a custom converter                                           |
+| `project`                | Boolean                                            | `true`                               | Set `false` for native planar coordinates                                                                              |
+| `projectionDefinitions`  | Name → PROJ/WKT string or parsed-definition object | None                                 | Local definitions for unsupported codes                                                                                |
+| `wkidAuthorities`        | Numeric WKID → `'EPSG' \| 'ESRI'`                  | Known aliases/authorities            | Choose the namespace; also supply a missing definition                                                                 |
+| `converter`              | `([x, y]) => [x, y]`                               | None                                 | Caller-supplied finite XY transformation; takes priority over built-in projection                                      |
+| `allowNad83ZeroShift`    | Boolean                                            | `false`                              | Opt in to the plain NAD83/WGS84 approximation                                                                          |
+| `spatialReference`       | `{ wkid?, latestWkid?, wkt?, wkt2? }`              | Esri metadata                        | Shared or individual source reference                                                                                  |
+| `geometryType`           | Esri type-name string                              | Inferred                             | Esri wrapper/feature geometry type                                                                                     |
+| `hasZ`                   | Boolean                                            | Esri metadata/inferred               | Declare elevation coordinates                                                                                          |
+| `hasM`                   | Boolean                                            | Esri metadata/inferred               | Declare measures                                                                                                       |
+| `maxPositions`           | Integer                                            | 100,000                              | Position budget per feature                                                                                            |
+| `maxDepth`               | Integer                                            | 32                                   | Geometry/coordinate nesting depth                                                                                      |
+| `maxTopologyChecks`      | Integer                                            | 1,000,000                            | Topology work budget per feature                                                                                       |
+| `maxComponents`          | Integer                                            | 10,000                               | Geometry objects, parts and rings per feature, including empty members                                                 |
+| `maxFeatures`            | Integer                                            | 100,000                              | Features per collection                                                                                                |
+| `maxTotalPositions`      | Integer                                            | 1,000,000                            | Aggregate position budget per collection                                                                               |
+| `maxTotalTopologyChecks` | Integer                                            | 10,000,000                           | Aggregate topology work budget per collection                                                                          |
+| `maxTotalWktBytes`       | Integer                                            | 67,108,864                           | Aggregate generated ASCII WKT bytes (64 MiB)                                                                           |
+| `onError`                | `'collect' \| 'throw'`                             | `'collect'`                          | Collection per-feature failure handling                                                                                |
+| `format`                 | `'geojson' \| 'esri' \| 'spatial'`                 | Auto-detect                          | `toSqlSpatial` only: select adapter                                                                                    |
+| `wktParameter`           | SQL parameter-name string                          | `'wkt'`                              | `sqlBinding` only: WKT binding name                                                                                    |
+| `sridParameter`          | SQL parameter-name string                          | `'srid'`                             | `sqlBinding` only: SRID binding name; must differ from WKT name                                                        |
 
 ## Collections
 
@@ -367,7 +369,7 @@ See [Esri geometry objects](https://developers.arcgis.com/rest/services-referenc
 
 Linear polygon shells are oriented counterclockwise and holes clockwise. Geography winding is determined in the same great-ellipse chart used for topology checks. `orientation: 'preserve'` can retain a single clockwise geography shell to select its larger complementary interior. Preserved complementary interiors involving holes or multipart polygons raise `GEOGRAPHY_UNCERTAIN`; preserved holes in an ordinary geography shell must be clockwise.
 
-Polygon topology repair uses nonzero shell union minus holes. For geography, this runs in a central projection where great elliptic edges are straight, then converts repaired vertices back to longitude/latitude. Planar geometry repair operates on XY coordinates. Polygon repair refuses changes that would discard Z/M. Esri classification supports disjoint shells, holes and islands; explicit repair can union consistently clockwise shells. Mixed-role crossing rings remain ambiguous. Line repair keeps directed traversal and Z/M in a GeometryCollection, splitting affected runs while retaining unaffected ones. Type-changing repairs inside CompoundCurve/CurvePolygon raise `CURVE_REPAIR`.
+Polygon topology repair uses nonzero shell union minus holes. For geography, this runs in a central projection where great elliptic edges are straight, then converts repaired vertices back to longitude/latitude. Planar geometry repair operates on XY coordinates. Polygon repair refuses changes that would discard Z/M. Esri classification supports disjoint shells, holes and islands; explicit repair can union consistently clockwise shells. Mixed-role crossing rings remain ambiguous. Line repair keeps directed traversal and Z/M in a GeometryCollection, splitting affected runs while retaining unaffected ones. `lineOverlap: 'deduplicate'` instead keeps each exact edge once; the result is a LineString or MultiLineString, and branches become separate parts. Type-changing repairs inside CompoundCurve/CurvePolygon raise `CURVE_REPAIR`.
 
 ### Handling invalid input
 

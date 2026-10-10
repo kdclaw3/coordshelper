@@ -3,6 +3,11 @@ export interface ConversionOptions {
   spatialType?: 'geography' | 'geometry';
   srid?: number;
   repair?: 'none' | 'safe' | 'topology';
+  /** With topology repair, deduplicate exact repeated/reversed edges into linear types.
+   * Preserves distinct segments/Z/M; refuses partial overlaps and conflicting Z/M.
+   * Emits LINE_OVERLAP_DEDUPLICATED. Default preserve retains directed traversals.
+   */
+  lineOverlap?: 'preserve' | 'deduplicate';
   orientation?: 'normalize' | 'preserve';
   sourceCrs?: string;
   targetCrs?: string;

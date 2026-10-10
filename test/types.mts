@@ -82,6 +82,10 @@ iterateGeoJSON({ type: 'Point', coordinates: [0, 0] });
 // @ts-expect-error The component limit must be numeric.
 fromSpatial({ type: 'FullGlobe' }, { maxComponents: 'unlimited' });
 fromEsri({}, { allowNad83ZeroShift: true });
+fromGeoJSON(null, { repair: 'topology', lineOverlap: 'deduplicate' });
+fromSpatial({ type: 'LineString', coordinates: [] }, { lineOverlap: 'preserve' });
+// @ts-expect-error Line cleanup policies are a closed set.
+fromGeoJSON(null, { repair: 'topology', lineOverlap: 'merge' });
 // @ts-expect-error Datum approximation requires a boolean opt-in.
 fromEsri({}, { allowNad83ZeroShift: 'yes' });
 try {

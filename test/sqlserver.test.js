@@ -12,6 +12,7 @@ import {
   polarContainingParts,
 } from './geography-atlas-fixtures.js';
 import { projectedControls, optionsFor } from './projected-wkt-fixtures.js';
+import { deduplicationCases, retrace } from './line-deduplication-fixtures.js';
 import {
   notch,
   curvedHole,
@@ -106,6 +107,53 @@ test(
           assert.equal(row.srid, r.srid);
           await extra(row);
         });
+      }
+      for (const spatialType of ['geography', 'geometry']) {
+        for (const [name, input, expected] of deduplicationCases) {
+          const r = h.fromGeoJSON(input, {
+            spatialType,
+            repair: 'topology',
+            lineOverlap: 'deduplicate',
+          });
+          await check(
+            `exact line deduplication ${spatialType}: ${name}`,
+            r,
+            async () => {
+              const comparison = (
+                await pool
+                  .request()
+                  .input('actual', sql.NVarChar(sql.MAX), r.wkt)
+                  .input(
+                    'expected',
+                    sql.NVarChar(sql.MAX),
+                    h.fromGeoJSON(expected, { spatialType }).wkt,
+                  )
+                  .input('srid', sql.Int, r.srid)
+                  .query(
+                    `SELECT ${spatialType}::STGeomFromText(@actual,@srid).STEquals(${spatialType}::STGeomFromText(@expected,@srid)) AS equal`,
+                  )
+              ).recordset[0];
+              assert.equal(
+                comparison.equal,
+                true,
+                'cleanup must retain the expected complete footprint',
+              );
+            },
+          );
+        }
+        await check(
+          `exact line deduplication ${spatialType}: retained Z/M`,
+          h.fromSpatial(
+            {
+              ...retrace,
+              coordinates: retrace.coordinates.map((p) => [...p, 7, 12]),
+            },
+            { spatialType, repair: 'topology', lineOverlap: 'deduplicate' },
+          ),
+          (row) => {
+            assert.match(row.text, /7 12/);
+          },
+        );
       }
       for (const [name, input] of [
         ['worldwide independent parts', worldwideParts],
